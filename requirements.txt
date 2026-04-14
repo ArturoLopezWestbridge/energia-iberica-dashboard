@@ -1,0 +1,23 @@
+# Dependencias - Dashboard Mercado Ibérico Energético
+# Instalar con: pip install -r requirements.txt
+
+# Descarga datos OMIE (spot electricidad ibérica)
+OMIEData>=0.4.0
+
+# Manipulación de datos
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Scraping y descarga web (OMIP futuros)
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Manejo de fechas
+python-dateutil>=2.8.0
+
+# Exportar a Excel (para compatibilidad con Power BI)
+openpyxl>=3.1.0
+
+# Variables de entorno (para credenciales SharePoint si se necesita)
+python-dotenv>=1.0.0
