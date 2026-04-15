@@ -18,6 +18,7 @@ LOG_PATH = "logs/actualizacion.log"
 SCRIPTS = [
     "scripts/01_descarga_omie.py",
     "scripts/02_descarga_omip.py",
+    "scripts/04_descarga_omie_15min.py",
 ]
 
 # ─────────────────────────────────────────────
