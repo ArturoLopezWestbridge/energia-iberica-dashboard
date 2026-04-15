@@ -1,121 +1,216 @@
 """
-Script 01 - Descarga de precios spot OMIE
+Script 01 - Descarga de precios spot OMIE (v2)
 Mercado ibérico de electricidad - España y Portugal
-Descarga datos históricos desde 2019 hasta hoy
-y actualiza el CSV en la carpeta data/
+
+Genera 3 CSVs:
+- omie_spot_15min.csv  : datos cada 15 min (desde oct 2025)
+- omie_spot_horario.csv: datos cada hora (2019→hoy)
+- omie_spot_diario.csv : promedio diario (2019→hoy)
+
+Maneja el cambio de formato de OMIE:
+- Antes oct 2025: 24 precios horarios
+- Desde oct 2025: 96 precios cada 15 minutos
 """
 
-import datetime as dt
+import requests
 import pandas as pd
+import numpy as np
 import os
-from OMIEData.DataImport.omie_marginalprice_importer import OMIEMarginalPriceFileImporter
-from OMIEData.Enums.all_enums import DataTypeInMarginalPriceFile
+import datetime as dt
+import time
+from io import StringIO
 
 # ─────────────────────────────────────────────
 # CONFIGURACIÓN
 # ─────────────────────────────────────────────
 
-OUTPUT_PATH = "data/omie_spot.csv"
+OUTPUT_15MIN   = "data/omie_spot_15min.csv"
+OUTPUT_HORARIO = "data/omie_spot_horario.csv"
+OUTPUT_DIARIO  = "data/omie_spot_diario.csv"
+
 FECHA_INICIO_HISTORICO = dt.datetime(2019, 1, 1)
+FECHA_CAMBIO_15MIN     = dt.datetime(2025, 10, 1)  # Desde aquí OMIE usa 96 periodos
+
+HEADERS_WEB = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+}
 
 # ─────────────────────────────────────────────
-# LÓGICA DE DESCARGA
+# DESCARGA DESDE OMIE
 # ─────────────────────────────────────────────
 
-def obtener_fecha_inicio():
-    """
-    Si ya existe el CSV, descarga solo desde el último dato.
-    Si no existe, descarga todo desde 2019.
-    """
-    if os.path.exists(OUTPUT_PATH):
-        df_existente = pd.read_csv(OUTPUT_PATH, parse_dates=["DATE"])
-        ultima_fecha = df_existente["DATE"].max()
-        # Empezamos desde el día siguiente al último dato
-        fecha_inicio = ultima_fecha + dt.timedelta(days=1)
-        print(f"✅ CSV existente encontrado. Descargando desde: {fecha_inicio.date()}")
-        return df_existente, fecha_inicio
-    else:
-        print(f"📥 No existe CSV. Descarga histórica desde: {FECHA_INICIO_HISTORICO.date()}")
-        return None, FECHA_INICIO_HISTORICO
+def construir_url_omie(fecha):
+    """Construye la URL del archivo diario de OMIE."""
+    anio = fecha.strftime("%Y")
+    mes  = fecha.strftime("%m")
+    dia  = fecha.strftime("%d")
+    nombre = f"INT_PBC_EV_H_{dia}_{mes}_{anio}_{dia}_{mes}_{anio}.TXT"
+    return f"https://www.omie.es/sites/default/files/dados/AGNO_{anio}/MES_{mes}/TXT/{nombre}"
 
 
-def descargar_spot(fecha_inicio, fecha_fin):
+def descargar_dia_omie(fecha):
     """
-    Descarga precios marginales horarios de OMIE
-    para España y Portugal.
+    Descarga el archivo TXT de OMIE para un día.
+    Retorna DataFrame crudo o None si no hay datos.
     """
-    if fecha_inicio >= fecha_fin:
-        print("ℹ️  Ya tienes los datos al día. Nada que descargar.")
+    url = construir_url_omie(fecha)
+    try:
+        r = requests.get(url, headers=HEADERS_WEB, timeout=15)
+        if r.status_code == 200 and len(r.content) > 100:
+            return r.text
+        return None
+    except Exception:
         return None
 
-    print(f"⬇️  Descargando OMIE spot: {fecha_inicio.date()} → {fecha_fin.date()}")
 
-    df = OMIEMarginalPriceFileImporter(
-        date_ini=fecha_inicio,
-        date_end=fecha_fin
-    ).read_to_dataframe(verbose=True)
+def parsear_archivo_omie(texto, fecha):
+    """
+    Parsea el archivo TXT de OMIE.
+    Maneja ambos formatos: 24 horas y 96 periodos de 15 min.
+    Retorna DataFrame con columnas: DATETIME, DATE, PERIOD, PRICE_SP, PRICE_PT
+    """
+    lineas = texto.strip().split('\n')
+
+    # Detectar separador
+    sep = ';' if ';' in lineas[0] else ','
+
+    registros = []
+
+    for linea in lineas:
+        linea = linea.strip()
+        if not linea or linea.startswith('*'):
+            continue
+
+        partes = [p.strip().replace(',', '.') for p in linea.split(sep)]
+
+        if len(partes) < 4:
+            continue
+
+        # Formato OMIE: ANIO;MES;DIA;PERIODO;PRECIO_ES;PRECIO_PT
+        try:
+            anio    = int(partes[0])
+            mes     = int(partes[1])
+            dia     = int(partes[2])
+            periodo = int(partes[3])
+
+            if anio < 2000 or anio > 2030:
+                continue
+            if periodo < 1:
+                continue
+
+            precio_sp = float(partes[4]) if partes[4] else None
+            precio_pt = float(partes[5]) if len(partes) > 5 and partes[5] else None
+
+            registros.append({
+                'anio': anio, 'mes': mes, 'dia': dia,
+                'periodo': periodo,
+                'PRICE_SP': precio_sp,
+                'PRICE_PT': precio_pt
+            })
+
+        except (ValueError, IndexError):
+            continue
+
+    if not registros:
+        return None
+
+    df = pd.DataFrame(registros)
+    df['DATE'] = pd.to_datetime(df[['anio', 'mes', 'dia']].rename(
+        columns={'anio': 'year', 'mes': 'month', 'dia': 'day'}))
+
+    # Determinar si es formato horario (24) o cuartohorario (96)
+    max_periodo = df['periodo'].max()
+    es_15min = max_periodo > 24
+
+    if es_15min:
+        # 96 periodos → intervalos de 15 min
+        df['DATETIME'] = df['DATE'] + pd.to_timedelta((df['periodo'] - 1) * 15, unit='min')
+        df['TIPO'] = '15min'
+    else:
+        # 24 periodos → horario
+        df['DATETIME'] = df['DATE'] + pd.to_timedelta(df['periodo'] - 1, unit='h')
+        df['TIPO'] = 'horario'
+
+    # Limpiar y ordenar
+    df = df[['DATETIME', 'DATE', 'periodo', 'PRICE_SP', 'PRICE_PT', 'TIPO']].copy()
+    df = df.rename(columns={'periodo': 'PERIOD'})
+    df = df.sort_values('DATETIME').reset_index(drop=True)
 
     return df
 
 
-def limpiar_y_transformar(df):
-    """
-    Transforma el formato wide (H1..H24) a formato long:
-    DATE | HOUR | PRICE_SP | PRICE_PT
-    """
-    # Separar precios España y Portugal
-    df_sp = df[df["CONCEPT"] == "PRICE_SP"].copy()
-    df_pt = df[df["CONCEPT"] == "PRICE_PT"].copy()
+# ─────────────────────────────────────────────
+# GESTIÓN DE CSVs
+# ─────────────────────────────────────────────
 
-    # Columnas de horas
-    hour_cols = [f"H{i}" for i in range(1, 25)]
-
-    # Pasar a formato long
-    df_sp_long = df_sp.melt(id_vars=["DATE"], value_vars=hour_cols,
-                             var_name="HOUR", value_name="PRICE_SP")
-    df_pt_long = df_pt.melt(id_vars=["DATE"], value_vars=hour_cols,
-                             var_name="HOUR", value_name="PRICE_PT")
-
-    # Unir España y Portugal
-    df_final = pd.merge(df_sp_long, df_pt_long, on=["DATE", "HOUR"])
-
-    # Limpiar columna HOUR: "H1" → 1
-    df_final["HOUR"] = df_final["HOUR"].str.replace("H", "").astype(int)
-
-    # Crear columna datetime completa
-    df_final["DATETIME"] = pd.to_datetime(df_final["DATE"]) + \
-                           pd.to_timedelta(df_final["HOUR"] - 1, unit="h")
-
-    # Ordenar columnas
-    df_final = df_final[["DATETIME", "DATE", "HOUR", "PRICE_SP", "PRICE_PT"]]
-    df_final = df_final.sort_values(["DATE", "HOUR"]).reset_index(drop=True)
-
-    # Redondear precios a 2 decimales
-    df_final["PRICE_SP"] = df_final["PRICE_SP"].round(2)
-    df_final["PRICE_PT"] = df_final["PRICE_PT"].round(2)
-
-    return df_final
+def obtener_ultima_fecha(path):
+    """Retorna la última fecha en el CSV o None si no existe."""
+    if not os.path.exists(path):
+        return None
+    df = pd.read_csv(path, usecols=['DATE'], parse_dates=['DATE'])
+    if df.empty:
+        return None
+    return df['DATE'].max().to_pydatetime()
 
 
-def guardar_csv(df_nuevo, df_existente):
-    """
-    Une datos nuevos con histórico existente y guarda el CSV.
-    """
+def agregar_a_csv(df_nuevo, path):
+    """Añade datos nuevos al CSV existente, eliminando duplicados."""
     os.makedirs("data", exist_ok=True)
 
-    if df_existente is not None and df_nuevo is not None:
+    if os.path.exists(path):
+        df_existente = pd.read_csv(path, parse_dates=['DATE', 'DATETIME'] 
+                                   if 'DATETIME' in pd.read_csv(path, nrows=0).columns 
+                                   else ['DATE'])
         df_final = pd.concat([df_existente, df_nuevo], ignore_index=True)
-        df_final = df_final.drop_duplicates(subset=["DATETIME"]).sort_values("DATETIME")
-    elif df_nuevo is not None:
-        df_final = df_nuevo
+        key = 'DATETIME' if 'DATETIME' in df_final.columns else 'DATE'
+        df_final = df_final.drop_duplicates(subset=[key]).sort_values(key)
     else:
-        print("ℹ️  Sin datos nuevos que guardar.")
-        return
+        df_final = df_nuevo
 
-    df_final.to_csv(OUTPUT_PATH, index=False)
-    print(f"💾 CSV guardado: {OUTPUT_PATH}")
-    print(f"   Total filas: {len(df_final):,}")
-    print(f"   Período: {df_final['DATE'].min()} → {df_final['DATE'].max()}")
+    df_final.to_csv(path, index=False)
+    return len(df_final)
+
+
+# ─────────────────────────────────────────────
+# CONSTRUCCIÓN DE LOS 3 CSVs
+# ─────────────────────────────────────────────
+
+def construir_horario_desde_15min(df_15min):
+    """Convierte datos de 15 min a horarios promediando cada 4 periodos."""
+    df = df_15min.copy()
+    df['DATE'] = pd.to_datetime(df['DATE'])
+    df['DATETIME'] = pd.to_datetime(df['DATETIME'])
+    df['HORA'] = (df['PERIOD'] - 1) // 4  # 0-23
+    df['DATETIME_HORA'] = df['DATE'] + pd.to_timedelta(df['HORA'], unit='h')
+
+    df_horario = df.groupby(['DATE', 'DATETIME_HORA', 'HORA']).agg(
+        PRICE_SP=('PRICE_SP', 'mean'),
+        PRICE_PT=('PRICE_PT', 'mean')
+    ).reset_index()
+
+    df_horario = df_horario.rename(columns={'DATETIME_HORA': 'DATETIME', 'HORA': 'HOUR'})
+    df_horario['HOUR'] = df_horario['HOUR'] + 1  # 1-24
+    df_horario['PRICE_SP'] = df_horario['PRICE_SP'].round(2)
+    df_horario['PRICE_PT'] = df_horario['PRICE_PT'].round(2)
+
+    return df_horario[['DATETIME', 'DATE', 'HOUR', 'PRICE_SP', 'PRICE_PT']]
+
+
+def construir_diario(df_horario):
+    """Promedia datos horarios a diarios."""
+    df = df_horario.copy()
+    df['DATE'] = pd.to_datetime(df['DATE'])
+
+    df_diario = df.groupby('DATE').agg(
+        PRICE_SP=('PRICE_SP', 'mean'),
+        PRICE_PT=('PRICE_PT', 'mean')
+    ).reset_index()
+
+    df_diario['PRICE_SP'] = df_diario['PRICE_SP'].round(2)
+    df_diario['PRICE_PT'] = df_diario['PRICE_PT'].round(2)
+    df_diario['DATE'] = df_diario['DATE'].dt.strftime('%Y-%m-%d')
+
+    return df_diario
 
 
 # ─────────────────────────────────────────────
@@ -123,23 +218,96 @@ def guardar_csv(df_nuevo, df_existente):
 # ─────────────────────────────────────────────
 
 if __name__ == "__main__":
-    fecha_fin = dt.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    print("=" * 60)
+    print("OMIE Spot - Descarga v2 (horario + 15min + diario)")
+    print("=" * 60)
 
-    # 1. Ver qué datos ya tenemos
-    df_existente, fecha_inicio = obtener_fecha_inicio()
+    hoy = dt.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # 2. Descargar datos nuevos
-    df_raw = descargar_spot(fecha_inicio, fecha_fin)
-
-    # 3. Limpiar y transformar
-    if df_raw is not None:
-        df_nuevo = limpiar_y_transformar(df_raw)
-        print(f"\n📊 Muestra de datos descargados:")
-        print(df_nuevo.head())
+    # Ver hasta dónde tenemos datos
+    ultima_diario = obtener_ultima_fecha(OUTPUT_DIARIO)
+    if ultima_diario:
+        fecha_inicio = ultima_diario + dt.timedelta(days=1)
+        print(f"✅ Datos existentes hasta: {ultima_diario.date()}")
     else:
-        df_nuevo = None
+        fecha_inicio = FECHA_INICIO_HISTORICO
+        print(f"📥 Primera ejecución. Descargando desde: {fecha_inicio.date()}")
 
-    # 4. Guardar
-    guardar_csv(df_nuevo, df_existente)
+    fecha_fin = hoy - dt.timedelta(days=1)
 
-    print("\n✅ Script 01 completado.")
+    if fecha_inicio > fecha_fin:
+        print("ℹ️  Datos ya al día. Nada que descargar.")
+        exit(0)
+
+    print(f"⬇️  Descargando: {fecha_inicio.date()} → {fecha_fin.date()}")
+
+    # Acumuladores
+    datos_15min   = []
+    datos_horario = []
+    dias_ok = 0
+    dias_error = 0
+
+    fecha_actual = fecha_inicio
+    while fecha_actual <= fecha_fin:
+
+        if fecha_actual.weekday() < 7:  # todos los días (OMIE publica fines de semana)
+            texto = descargar_dia_omie(fecha_actual)
+
+            if texto:
+                df_dia = parsear_archivo_omie(texto, fecha_actual)
+
+                if df_dia is not None and len(df_dia) > 0:
+                    es_15min = df_dia['TIPO'].iloc[0] == '15min'
+
+                    if es_15min:
+                        # Guardar 15min
+                        df_15 = df_dia[['DATETIME', 'DATE', 'PERIOD', 'PRICE_SP', 'PRICE_PT']].copy()
+                        datos_15min.append(df_15)
+
+                        # Construir horario desde 15min
+                        df_h = construir_horario_desde_15min(df_dia)
+                        datos_horario.append(df_h)
+                    else:
+                        # Formato horario clásico
+                        df_h = df_dia[['DATETIME', 'DATE', 'PERIOD', 'PRICE_SP', 'PRICE_PT']].copy()
+                        df_h = df_h.rename(columns={'PERIOD': 'HOUR'})
+                        datos_horario.append(df_h)
+
+                    dias_ok += 1
+                    if dias_ok % 50 == 0:
+                        print(f"  ✅ {dias_ok} días procesados... último: {fecha_actual.date()}")
+                else:
+                    dias_error += 1
+            else:
+                dias_error += 1
+
+            time.sleep(0.2)
+
+        fecha_actual += dt.timedelta(days=1)
+
+    print(f"\n📊 Días OK: {dias_ok} | Sin datos: {dias_error}")
+
+    # Guardar CSVs
+    os.makedirs("data", exist_ok=True)
+
+    if datos_15min:
+        df_15min_total = pd.concat(datos_15min, ignore_index=True)
+        df_15min_total['DATE'] = pd.to_datetime(df_15min_total['DATE']).dt.strftime('%Y-%m-%d')
+        total = agregar_a_csv(df_15min_total, OUTPUT_15MIN)
+        print(f"💾 {OUTPUT_15MIN}: {total:,} filas")
+
+    if datos_horario:
+        df_horario_total = pd.concat(datos_horario, ignore_index=True)
+        df_horario_total['DATE'] = pd.to_datetime(df_horario_total['DATE']).dt.strftime('%Y-%m-%d')
+
+        # Construir diario
+        df_diario_total = construir_diario(df_horario_total)
+
+        df_horario_total['DATETIME'] = pd.to_datetime(df_horario_total['DATETIME']).dt.strftime('%Y-%m-%d %H:%M:%S')
+        total_h = agregar_a_csv(df_horario_total, OUTPUT_HORARIO)
+        print(f"💾 {OUTPUT_HORARIO}: {total_h:,} filas")
+
+        total_d = agregar_a_csv(df_diario_total, OUTPUT_DIARIO)
+        print(f"💾 {OUTPUT_DIARIO}: {total_d:,} filas")
+
+    print("\n✅ Script 01 v2 completado.")
