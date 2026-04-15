@@ -5418,3 +5418,47 @@
 [2026-04-15 12:14:23]    ✅ Script 02 completado.
 [2026-04-15 12:14:23] ==================================================
 [2026-04-15 12:14:23] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
+[2026-04-15 12:22:15] ==================================================
+[2026-04-15 12:22:15] 🚀 INICIO - Actualización diaria mercado ibérico
+[2026-04-15 12:22:15] ==================================================
+[2026-04-15 12:22:15] ▶️  Ejecutando: scripts/01_descarga_omie.py
+[2026-04-15 12:22:17] ✅ scripts/01_descarga_omie.py completado correctamente
+[2026-04-15 12:22:17]    ============================================================
+[2026-04-15 12:22:17]    OMIE Spot v3 - Horario + 15min + Diario
+[2026-04-15 12:22:17]    ============================================================
+[2026-04-15 12:22:17]    Leyendo data/omie_spot.csv...
+[2026-04-15 12:22:17]    Filas: 63,864 | 2019-01-01 -> 2026-04-14
+[2026-04-15 12:22:17]    Precios SP: media=80.41 EUR/MWh
+[2026-04-15 12:22:17]    Guardado data/omie_spot_horario.csv: 63,864 filas
+[2026-04-15 12:22:17]    Guardado data/omie_spot_diario.csv: 2,661 filas
+[2026-04-15 12:22:17]    Datos ya al dia.
+[2026-04-15 12:22:17]    
+[2026-04-15 12:22:17]    Script 01 v3 completado.
+[2026-04-15 12:22:17] ▶️  Ejecutando: scripts/02_descarga_omip.py
+[2026-04-15 12:24:08] ✅ scripts/02_descarga_omip.py completado correctamente
+[2026-04-15 12:24:08]    ============================================================
+[2026-04-15 12:24:08]    OMIP - Descarga de Futuros (v2 - bloques de 90 días)
+[2026-04-15 12:24:08]    ============================================================
+[2026-04-15 12:24:08]    📥 Primera ejecución. Empezando desde 2019-01-02
+[2026-04-15 12:24:08]    ⬇️  Descargando: 2019-01-02 → 2019-04-02
+[2026-04-15 12:24:08]    📊 Días con datos: 0
+[2026-04-15 12:24:08]    ℹ️  Sin datos nuevos.
+[2026-04-15 12:24:08]    📌 Progreso guardado: 2019-04-03
+[2026-04-15 12:24:08]    
+[2026-04-15 12:24:08]    ⚠️  Quedan datos desde 2019-04-03 — vuelve a ejecutar el workflow.
+[2026-04-15 12:24:08]    
+[2026-04-15 12:24:08]    ✅ Script 02 completado.
+[2026-04-15 12:24:08] ▶️  Ejecutando: scripts/04_descarga_omie_15min.py
+[2026-04-15 12:26:24] ✅ scripts/04_descarga_omie_15min.py completado correctamente
+[2026-04-15 12:26:24]    ============================================================
+[2026-04-15 12:26:24]    OMIE 15 minutos - Descarga desde oct 2025
+[2026-04-15 12:26:24]    ============================================================
+[2026-04-15 12:26:24]    📥 Primera ejecución. Desde: 2025-10-01
+[2026-04-15 12:26:24]    ⬇️  Descargando: 2025-10-01 → 2026-04-14
+[2026-04-15 12:26:24]    
+[2026-04-15 12:26:24]    📊 Días OK: 0 | Sin datos: 196
+[2026-04-15 12:26:24]    ❌ No se descargaron datos.
+[2026-04-15 12:26:24]    
+[2026-04-15 12:26:24]    ✅ Script 04 completado.
+[2026-04-15 12:26:24] ==================================================
+[2026-04-15 12:26:24] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
