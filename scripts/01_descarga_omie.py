@@ -1,5 +1,5 @@
 """
-Script 01 - OMIE Spot v5
+Script 01 - OMIE Spot v5.1
 Genera:
 - omie_spot_horario.csv
 - omie_spot_diario.csv
@@ -8,8 +8,7 @@ Logica:
 1) Usa omie_spot.csv como historico base
 2) Mantiene/actualiza omie_spot_horario.csv
 3) Hace overlay desde omie_spot_15min.csv a partir de 2025-10-01
-4) Corrige explicitamente los dias de cambio horario en PRICE_SP
-   para que el diario cuadre con el maestro
+4) Evita errores .dt forzando datetime antes de usar .dt
 """
 
 import os
@@ -29,7 +28,6 @@ HEADERS_WEB = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
 }
 
-# Validado contra tu maestro para PRICE_SP
 FIX_DIARIO_SP = {
     "2019-10-27": 53.10,
     "2020-03-29": 18.57,
@@ -42,21 +40,27 @@ FIX_DIARIO_SP = {
 }
 
 
+def asegurar_datetime_col(df, col):
+    df[col] = pd.to_datetime(df[col], errors="coerce")
+    return df
+
+
 def formatear_datetime_local_hora(fecha, hour):
-    # hour = 1..25
     hora_cero = int(hour) - 1
     return f"{pd.to_datetime(fecha).strftime('%Y-%m-%d')} {hora_cero:02d}:00:00"
 
 
 def aplicar_fixes_diario_sp(df_d):
     df = df_d.copy()
-    df["DATE"] = pd.to_datetime(df["DATE"]).dt.strftime("%Y-%m-%d")
+    df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+    df["DATE_STR"] = df["DATE"].dt.strftime("%Y-%m-%d")
 
     for fecha_str, valor_sp in FIX_DIARIO_SP.items():
-        mask = df["DATE"] == fecha_str
+        mask = df["DATE_STR"] == fecha_str
         if mask.any():
             df.loc[mask, "PRICE_SP"] = round(float(valor_sp), 2)
 
+    df = df.drop(columns=["DATE_STR"])
     return df
 
 
@@ -77,15 +81,23 @@ def convertir_spot_existente():
         df["PRICE_SP"] = df["PRICE_SP"].round(2)
         df["PRICE_PT"] = df["PRICE_PT"].round(2)
 
+    df["DATE"] = pd.to_datetime(df["DATE"], errors="coerce")
+    df["DATETIME"] = pd.to_datetime(df["DATETIME"], errors="coerce")
+
     # Horario historico base
     df_h = df[["DATE", "HOUR", "PRICE_SP", "PRICE_PT"]].copy()
-    df_h["DATE"] = pd.to_datetime(df_h["DATE"])
+    df_h["DATE"] = pd.to_datetime(df_h["DATE"], errors="coerce")
     df_h["DATETIME"] = df_h.apply(lambda r: formatear_datetime_local_hora(r["DATE"], r["HOUR"]), axis=1)
+    df_h["DATETIME"] = pd.to_datetime(df_h["DATETIME"], errors="coerce")
     df_h = df_h[["DATETIME", "DATE", "HOUR", "PRICE_SP", "PRICE_PT"]]
+    df_h = df_h.dropna(subset=["DATE", "DATETIME"])
     df_h = df_h.drop_duplicates(subset=["DATE", "HOUR"], keep="last").sort_values(["DATE", "HOUR"]).reset_index(drop=True)
 
     df_h_out = df_h.copy()
+    df_h_out["DATE"] = pd.to_datetime(df_h_out["DATE"], errors="coerce")
+    df_h_out["DATETIME"] = pd.to_datetime(df_h_out["DATETIME"], errors="coerce")
     df_h_out["DATE"] = df_h_out["DATE"].dt.strftime("%Y-%m-%d")
+    df_h_out["DATETIME"] = df_h_out["DATETIME"].dt.strftime("%Y-%m-%d %H:%M:%S")
     df_h_out.to_csv(OUTPUT_HORARIO, index=False)
     print(f"Guardado {OUTPUT_HORARIO}: {len(df_h_out):,} filas")
 
@@ -99,13 +111,17 @@ def convertir_spot_existente():
         .reset_index()
     )
 
+    df_d["DATE"] = pd.to_datetime(df_d["DATE"], errors="coerce")
     df_d["PRICE_SP"] = df_d["PRICE_SP"].round(2)
     df_d["PRICE_PT"] = df_d["PRICE_PT"].round(2)
     df_d = aplicar_fixes_diario_sp(df_d)
     df_d = df_d.sort_values("DATE").reset_index(drop=True)
 
-    df_d.to_csv(OUTPUT_DIARIO, index=False)
-    print(f"Guardado {OUTPUT_DIARIO}: {len(df_d):,} filas")
+    df_d_out = df_d.copy()
+    df_d_out["DATE"] = pd.to_datetime(df_d_out["DATE"], errors="coerce")
+    df_d_out["DATE"] = df_d_out["DATE"].dt.strftime("%Y-%m-%d")
+    df_d_out.to_csv(OUTPUT_DIARIO, index=False)
+    print(f"Guardado {OUTPUT_DIARIO}: {len(df_d_out):,} filas")
 
     return df["DATE"].max().date()
 
@@ -159,8 +175,6 @@ def parsear_omie_txt(texto, fecha):
     df["DATE"] = pd.to_datetime(fecha)
 
     max_p = df["PERIOD"].max()
-
-    # 25 periodos sigue siendo horario; 96/100 es 15 min
     es_15min = max_p > 25
 
     if df["PRICE_SP"].dropna().mean() > 500:
@@ -203,7 +217,6 @@ def descargar_nuevos_datos(desde_fecha):
 
                 if df_dia is not None:
                     if df_dia["es_15min"].iloc[0]:
-                        # Guardar 15min derivado de este TXT si aplica
                         df_15 = df_dia.copy()
                         df_15["DATETIME"] = df_15["PERIOD"].apply(
                             lambda p: f"{fecha_actual.strftime('%Y-%m-%d')} {((p-1)*15)//60:02d}:{((p-1)*15)%60:02d}:00"
@@ -212,7 +225,6 @@ def descargar_nuevos_datos(desde_fecha):
                             df_15[["DATETIME", "DATE", "PERIOD", "PRICE_SP", "PRICE_PT"]].copy()
                         )
 
-                        # Agregar a horario
                         df_tmp = df_dia.copy()
                         df_tmp["HORA0"] = (df_tmp["PERIOD"] - 1) // 4
 
@@ -226,7 +238,7 @@ def descargar_nuevos_datos(desde_fecha):
                         )
                         df_h["HOUR"] = df_h["HORA0"] + 1
                         df_h["DATETIME"] = df_h.apply(
-                            lambda r: formatear_datetime_local_hora(r["DATE"], r["HOUR"]),
+                            lambda r_: formatear_datetime_local_hora(r_["DATE"], r_["HOUR"]),
                             axis=1
                         )
 
@@ -234,10 +246,9 @@ def descargar_nuevos_datos(desde_fecha):
                             df_h[["DATETIME", "DATE", "HOUR", "PRICE_SP", "PRICE_PT"]].copy()
                         )
                     else:
-                        # Horario normal (24 o 25 periodos)
                         df_h = df_dia.copy().rename(columns={"PERIOD": "HOUR"})
                         df_h["DATETIME"] = df_h.apply(
-                            lambda r: formatear_datetime_local_hora(r["DATE"], r["HOUR"]),
+                            lambda r_: formatear_datetime_local_hora(r_["DATE"], r_["HOUR"]),
                             axis=1
                         )
 
@@ -259,16 +270,21 @@ def descargar_nuevos_datos(desde_fecha):
         df_nh = pd.concat(nuevos_h, ignore_index=True)
 
         if os.path.exists(OUTPUT_HORARIO):
-            df_eh = pd.read_csv(OUTPUT_HORARIO, parse_dates=["DATE"])
+            df_eh = pd.read_csv(OUTPUT_HORARIO)
             df_fh = pd.concat([df_eh, df_nh], ignore_index=True)
         else:
             df_fh = df_nh
 
-        df_fh["DATE"] = pd.to_datetime(df_fh["DATE"])
+        df_fh["DATE"] = pd.to_datetime(df_fh["DATE"], errors="coerce")
+        df_fh["DATETIME"] = pd.to_datetime(df_fh["DATETIME"], errors="coerce")
+        df_fh = df_fh.dropna(subset=["DATE", "DATETIME"])
         df_fh = df_fh.drop_duplicates(subset=["DATE", "HOUR"], keep="last").sort_values(["DATE", "HOUR"]).reset_index(drop=True)
 
         df_fh_out = df_fh.copy()
+        df_fh_out["DATE"] = pd.to_datetime(df_fh_out["DATE"], errors="coerce")
+        df_fh_out["DATETIME"] = pd.to_datetime(df_fh_out["DATETIME"], errors="coerce")
         df_fh_out["DATE"] = df_fh_out["DATE"].dt.strftime("%Y-%m-%d")
+        df_fh_out["DATETIME"] = df_fh_out["DATETIME"].dt.strftime("%Y-%m-%d %H:%M:%S")
         df_fh_out.to_csv(OUTPUT_HORARIO, index=False)
         print(f"Actualizado {OUTPUT_HORARIO}: {len(df_fh_out):,} filas")
 
@@ -281,10 +297,12 @@ def descargar_nuevos_datos(desde_fecha):
         else:
             df_f15 = df_n15
 
-        df_f15["DATE"] = pd.to_datetime(df_f15["DATE"])
+        df_f15["DATE"] = pd.to_datetime(df_f15["DATE"], errors="coerce")
+        df_f15 = df_f15.dropna(subset=["DATE"])
         df_f15 = df_f15.drop_duplicates(subset=["DATE", "PERIOD"], keep="last").sort_values(["DATE", "PERIOD"]).reset_index(drop=True)
 
         df_f15_out = df_f15.copy()
+        df_f15_out["DATE"] = pd.to_datetime(df_f15_out["DATE"], errors="coerce")
         df_f15_out["DATE"] = df_f15_out["DATE"].dt.strftime("%Y-%m-%d")
         df_f15_out.to_csv(OUTPUT_15MIN, index=False)
         print(f"Actualizado {OUTPUT_15MIN}: {len(df_f15_out):,} filas")
@@ -307,15 +325,22 @@ def overlay_desde_15min():
 
     print(f"Aplicando overlay desde {FECHA_INICIO_15MIN} usando {OUTPUT_15MIN}...")
 
-    df_h_base = pd.read_csv(OUTPUT_HORARIO, parse_dates=["DATE"])
-    df_d_base = pd.read_csv(OUTPUT_DIARIO, parse_dates=["DATE"])
-    df_15 = pd.read_csv(OUTPUT_15MIN, parse_dates=["DATE"])
+    df_h_base = pd.read_csv(OUTPUT_HORARIO)
+    df_d_base = pd.read_csv(OUTPUT_DIARIO)
+    df_15 = pd.read_csv(OUTPUT_15MIN)
 
-    # Historico antes del corte
+    df_h_base["DATE"] = pd.to_datetime(df_h_base["DATE"], errors="coerce")
+    df_h_base["DATETIME"] = pd.to_datetime(df_h_base["DATETIME"], errors="coerce")
+    df_d_base["DATE"] = pd.to_datetime(df_d_base["DATE"], errors="coerce")
+    df_15["DATE"] = pd.to_datetime(df_15["DATE"], errors="coerce")
+
+    df_h_base = df_h_base.dropna(subset=["DATE"])
+    df_d_base = df_d_base.dropna(subset=["DATE"])
+    df_15 = df_15.dropna(subset=["DATE"])
+
     df_h_hist = df_h_base[df_h_base["DATE"] < corte].copy()
     df_d_hist = df_d_base[df_d_base["DATE"] < corte].copy()
 
-    # Horario desde 15min
     df_15["HORA0"] = (df_15["PERIOD"] - 1) // 4
 
     df_h_15 = (
@@ -329,12 +354,12 @@ def overlay_desde_15min():
 
     df_h_15["HOUR"] = df_h_15["HORA0"] + 1
     df_h_15["DATETIME"] = df_h_15.apply(
-        lambda r: formatear_datetime_local_hora(r["DATE"], r["HOUR"]),
+        lambda r_: formatear_datetime_local_hora(r_["DATE"], r_["HOUR"]),
         axis=1
     )
+    df_h_15["DATETIME"] = pd.to_datetime(df_h_15["DATETIME"], errors="coerce")
     df_h_15 = df_h_15[["DATETIME", "DATE", "HOUR", "PRICE_SP", "PRICE_PT"]].copy()
 
-    # Diario desde 15min
     df_d_15 = (
         df_15.groupby("DATE")
         .agg(
@@ -344,29 +369,34 @@ def overlay_desde_15min():
         .reset_index()
     )
 
-    # Unir
     df_h_final = pd.concat([df_h_hist, df_h_15], ignore_index=True)
-    df_h_final["DATE"] = pd.to_datetime(df_h_final["DATE"])
+    df_h_final["DATE"] = pd.to_datetime(df_h_final["DATE"], errors="coerce")
+    df_h_final["DATETIME"] = pd.to_datetime(df_h_final["DATETIME"], errors="coerce")
+    df_h_final = df_h_final.dropna(subset=["DATE", "DATETIME"])
     df_h_final = df_h_final.drop_duplicates(subset=["DATE", "HOUR"], keep="last").sort_values(["DATE", "HOUR"]).reset_index(drop=True)
     df_h_final["PRICE_SP"] = df_h_final["PRICE_SP"].round(2)
     df_h_final["PRICE_PT"] = df_h_final["PRICE_PT"].round(2)
 
     df_d_final = pd.concat([df_d_hist, df_d_15], ignore_index=True)
-    df_d_final["DATE"] = pd.to_datetime(df_d_final["DATE"])
+    df_d_final["DATE"] = pd.to_datetime(df_d_final["DATE"], errors="coerce")
+    df_d_final = df_d_final.dropna(subset=["DATE"])
     df_d_final = df_d_final.drop_duplicates(subset=["DATE"], keep="last").sort_values("DATE").reset_index(drop=True)
     df_d_final["PRICE_SP"] = df_d_final["PRICE_SP"].round(2)
     df_d_final["PRICE_PT"] = df_d_final["PRICE_PT"].round(2)
 
-    # Aplicar correcciones de cambio horario en España
     df_d_final = aplicar_fixes_diario_sp(df_d_final)
 
-    # Guardar horario final
     df_h_out = df_h_final.copy()
+    df_h_out["DATE"] = pd.to_datetime(df_h_out["DATE"], errors="coerce")
+    df_h_out["DATETIME"] = pd.to_datetime(df_h_out["DATETIME"], errors="coerce")
+    df_h_out = df_h_out.dropna(subset=["DATE", "DATETIME"])
     df_h_out["DATE"] = df_h_out["DATE"].dt.strftime("%Y-%m-%d")
+    df_h_out["DATETIME"] = df_h_out["DATETIME"].dt.strftime("%Y-%m-%d %H:%M:%S")
     df_h_out.to_csv(OUTPUT_HORARIO, index=False)
 
-    # Guardar diario final
     df_d_out = df_d_final.copy()
+    df_d_out["DATE"] = pd.to_datetime(df_d_out["DATE"], errors="coerce")
+    df_d_out = df_d_out.dropna(subset=["DATE"])
     df_d_out["DATE"] = df_d_out["DATE"].dt.strftime("%Y-%m-%d")
     df_d_out.to_csv(OUTPUT_DIARIO, index=False)
 
@@ -376,7 +406,7 @@ def overlay_desde_15min():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("OMIE Spot v5 - historico + overlay 15min + fixes DST")
+    print("OMIE Spot v5.1 - historico + overlay 15min + fixes DST")
     print("=" * 60)
 
     os.makedirs("data", exist_ok=True)
@@ -388,4 +418,4 @@ if __name__ == "__main__":
 
     overlay_desde_15min()
 
-    print("\nScript 01 v5 completado.")
+    print("\nScript 01 v5.1 completado.")
