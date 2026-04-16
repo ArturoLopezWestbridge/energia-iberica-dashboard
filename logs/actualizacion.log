@@ -5607,3 +5607,70 @@
 [2026-04-16 09:39:21]    Datos ya al dia.
 [2026-04-16 09:39:21] ==================================================
 [2026-04-16 09:39:21] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
+[2026-04-16 10:00:35] ==================================================
+[2026-04-16 10:00:35] 🚀 INICIO - Actualización diaria mercado ibérico
+[2026-04-16 10:00:35] ==================================================
+[2026-04-16 10:00:35] ▶️  Ejecutando: scripts/01_descarga_omie.py
+[2026-04-16 10:00:36] ✅ scripts/01_descarga_omie.py completado correctamente
+[2026-04-16 10:00:36]    ============================================================
+[2026-04-16 10:00:36]    OMIE Spot v4 - historico + overlay 15min
+[2026-04-16 10:00:36]    ============================================================
+[2026-04-16 10:00:36]    Leyendo data/omie_spot.csv...
+[2026-04-16 10:00:36]    Filas: 63,864 | 2019-01-01 -> 2026-04-14
+[2026-04-16 10:00:36]    Guardado data/omie_spot_horario.csv: 63,864 filas
+[2026-04-16 10:00:36]    Guardado data/omie_spot_diario.csv: 2,661 filas
+[2026-04-16 10:00:36]    Descargando: 2026-04-14 -> 2026-04-15
+[2026-04-16 10:00:36]    Dias OK: 0
+[2026-04-16 10:00:36]    Aplicando overlay desde 2025-10-01 usando data/omie_spot_15min.csv...
+[2026-04-16 10:00:36]    Horario final: 63,839 filas
+[2026-04-16 10:00:36]    Diario final: 2,660 filas
+[2026-04-16 10:00:36]    
+[2026-04-16 10:00:36]    Script 01 v4 completado.
+[2026-04-16 10:00:36] ▶️  Ejecutando: scripts/02_descarga_omip.py
+[2026-04-16 10:02:20] ✅ scripts/02_descarga_omip.py completado correctamente
+[2026-04-16 10:02:20]    ============================================================
+[2026-04-16 10:02:20]    OMIP - Descarga de Futuros (v2 - bloques de 90 días)
+[2026-04-16 10:02:20]    ============================================================
+[2026-04-16 10:02:20]    📥 Primera ejecución. Empezando desde 2019-01-02
+[2026-04-16 10:02:20]    ⬇️  Descargando: 2019-01-02 → 2019-04-02
+[2026-04-16 10:02:20]    📊 Días con datos: 0
+[2026-04-16 10:02:20]    ℹ️  Sin datos nuevos.
+[2026-04-16 10:02:20]    📌 Progreso guardado: 2019-04-03
+[2026-04-16 10:02:20]    
+[2026-04-16 10:02:20]    ⚠️  Quedan datos desde 2019-04-03 — vuelve a ejecutar el workflow.
+[2026-04-16 10:02:20]    
+[2026-04-16 10:02:20]    ✅ Script 02 completado.
+[2026-04-16 10:02:20] ▶️  Ejecutando: scripts/04_descarga_omie_15min.py
+[2026-04-16 10:04:39] ✅ scripts/04_descarga_omie_15min.py completado correctamente
+[2026-04-16 10:04:39]    ============================================================
+[2026-04-16 10:04:39]    OMIE 15 minutos v3 - CORREGIDO
+[2026-04-16 10:04:39]    ============================================================
+[2026-04-16 10:04:39]    Reconstruccion completa activada. Desde: 2025-10-01
+[2026-04-16 10:04:39]    Eliminado archivo previo: data/omie_spot_15min.csv
+[2026-04-16 10:04:39]    Descargando: 2025-10-01 -> 2026-04-15
+[2026-04-16 10:04:39]      OK 10 dias... ultimo: 2025-10-10
+[2026-04-16 10:04:39]      OK 20 dias... ultimo: 2025-10-20
+[2026-04-16 10:04:39]      OK 30 dias... ultimo: 2025-10-31
+[2026-04-16 10:04:39]      OK 40 dias... ultimo: 2025-11-10
+[2026-04-16 10:04:39]      OK 50 dias... ultimo: 2025-11-20
+[2026-04-16 10:04:39]      OK 60 dias... ultimo: 2025-12-01
+[2026-04-16 10:04:39]      OK 70 dias... ultimo: 2025-12-11
+[2026-04-16 10:04:39]      OK 80 dias... ultimo: 2025-12-21
+[2026-04-16 10:04:39]      OK 90 dias... ultimo: 2025-12-31
+[2026-04-16 10:04:39]      OK 100 dias... ultimo: 2026-01-10
+[2026-04-16 10:04:39]      OK 110 dias... ultimo: 2026-01-20
+[2026-04-16 10:04:39]      OK 120 dias... ultimo: 2026-01-30
+[2026-04-16 10:04:39]      OK 130 dias... ultimo: 2026-02-09
+[2026-04-16 10:04:39]      OK 140 dias... ultimo: 2026-02-19
+[2026-04-16 10:04:39]      OK 150 dias... ultimo: 2026-03-01
+[2026-04-16 10:04:39]      OK 160 dias... ultimo: 2026-03-11
+[2026-04-16 10:04:39]      OK 170 dias... ultimo: 2026-03-21
+[2026-04-16 10:04:39]      OK 180 dias... ultimo: 2026-04-01
+[2026-04-16 10:04:39]      OK 190 dias... ultimo: 2026-04-11
+[2026-04-16 10:04:39]    Dias OK: 194 | Sin datos/error: 3
+[2026-04-16 10:04:39]    Guardado data/omie_spot_15min.csv: 18,624 filas
+[2026-04-16 10:04:39]    Periodo: 2025-10-01 -> 2026-04-15
+[2026-04-16 10:04:39]    
+[2026-04-16 10:04:39]    Script 04 v3 completado.
+[2026-04-16 10:04:39] ==================================================
+[2026-04-16 10:04:39] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
