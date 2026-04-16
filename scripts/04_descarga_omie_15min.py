@@ -1,14 +1,13 @@
 """
-Script 04 - OMIE 15 minutos (v3 CORREGIDO)
-- Corrige inversión de columnas ES/PT
-- Permite reconstrucción completa del histórico 15 min
-- Genera data/omie_spot_15min.csv desde 2025-10-01
+Script 04 - OMIE 15 minutos (v4)
+- Corrige la asignacion ES/PT
+- Soporta dias de 92, 96 y 100 cuartos (cambio horario)
+- Deduplica por DATE + PERIOD, no por DATETIME
+- Permite reconstruccion completa del historico 15 min
 
 IMPORTANTE:
-- Para corregir el histórico ya mal guardado, deja:
-    RECONSTRUIR_COMPLETO = True
-  y ejecuta una vez.
-- Después puedes volverlo a False para que solo añada días nuevos.
+- Deja RECONSTRUIR_COMPLETO = True una vez
+- Cuando ya quede bien, puedes volverlo a False
 """
 
 import requests
@@ -21,7 +20,7 @@ import re
 OUTPUT_15MIN = "data/omie_spot_15min.csv"
 FECHA_INICIO_15MIN = dt.date(2025, 10, 1)
 
-# PONER EN TRUE UNA VEZ PARA REHACER TODO EL HISTÓRICO 15MIN
+# PONER EN TRUE UNA VEZ PARA REHACER TODO EL HISTORICO
 RECONSTRUIR_COMPLETO = True
 
 HEADERS_WEB = {
@@ -30,20 +29,32 @@ HEADERS_WEB = {
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
 }
 
+
 def construir_url_omie_15min(fecha):
     fecha_str = fecha.strftime("%Y%m%d")
     return f"https://www.omie.es/en/file-download?parents=marginalpdbc&filename=marginalpdbc_{fecha_str}.1"
+
+
+def formatear_datetime_local_15min(fecha, period):
+    total_min = (int(period) - 1) * 15
+    hora = total_min // 60
+    minuto = total_min % 60
+    return f"{fecha.strftime('%Y-%m-%d')} {hora:02d}:{minuto:02d}:00"
+
 
 def parsear_marginalpdbc(texto, fecha):
     """
     Formato esperado:
     YYYY;MM;DD;H1Q1;VALOR_1;VALOR_2
 
-    OJO:
-    En la práctica observada, el valor correcto de España está en la 6ª columna
-    y Portugal en la 5ª, es decir:
-      parts[5] -> España
-      parts[4] -> Portugal
+    En la práctica validada contra tu maestro:
+    - España  = columna 6
+    - Portugal = columna 5
+
+    Soporta:
+    - 92 periodos  -> dia de 23 horas
+    - 96 periodos  -> dia normal
+    - 100 periodos -> dia de 25 horas
     """
 
     lineas = texto.strip().split("\n")
@@ -56,9 +67,7 @@ def parsear_marginalpdbc(texto, fecha):
     for linea in lineas:
         linea = linea.strip()
 
-        if not linea:
-            continue
-        if linea.startswith("*"):
+        if not linea or linea.startswith("*"):
             continue
 
         partes = [p.strip() for p in linea.split(sep)]
@@ -72,26 +81,24 @@ def parsear_marginalpdbc(texto, fecha):
 
             periodo_raw = partes[3].strip().upper()
 
-            # Detectar HxQy
             if "H" in periodo_raw and "Q" in periodo_raw:
                 m = re.match(r"H(\d+)Q(\d+)", periodo_raw)
                 if not m:
                     continue
 
-                hora = int(m.group(1))      # 1..24
-                cuarto = int(m.group(2))    # 1..4
+                hora = int(m.group(1))
+                cuarto = int(m.group(2))
 
-                if hora < 1 or hora > 24 or cuarto < 1 or cuarto > 4:
+                if hora < 1 or hora > 25 or cuarto < 1 or cuarto > 4:
                     continue
 
                 periodo_num = (hora - 1) * 4 + cuarto
             else:
-                # Si no es HxQy, intentar número directo
                 periodo_num = int(periodo_raw)
 
-            # IMPORTANTE: columnas invertidas respecto a la lectura anterior
-            # España = parts[5]
-            # Portugal = parts[4]
+            # Validado contra tu maestro:
+            # parts[5] = España
+            # parts[4] = Portugal
             precio_pt_str = partes[4].replace(",", ".").strip()
             precio_sp_str = partes[5].replace(",", ".").strip()
 
@@ -113,31 +120,34 @@ def parsear_marginalpdbc(texto, fecha):
     df = pd.DataFrame(registros)
 
     # Nos quedamos solo con 15 min reales
-    if df["PERIOD"].max() <= 24:
+    if df["PERIOD"].max() <= 25:
         return None
 
-    # Filtrar periodos válidos 1..96
-    df = df[(df["PERIOD"] >= 1) & (df["PERIOD"] <= 96)].copy()
+    # Deduplicar por periodo y ordenar
+    df = df.drop_duplicates(subset=["PERIOD"], keep="last").sort_values("PERIOD").reset_index(drop=True)
 
-    if df.empty:
+    n = len(df)
+    if n not in (92, 96, 100):
         return None
 
-    # Quitar duplicados de periodo por si el fichero trae repeticiones
-    df = df.drop_duplicates(subset=["PERIOD"], keep="last").sort_values("PERIOD")
-
-    # Si no hay 96 periodos, mejor no guardar el día
-    if len(df) != 96:
+    # Validar secuencia exacta
+    periodos_esperados = list(range(1, n + 1))
+    if df["PERIOD"].tolist() != periodos_esperados:
         return None
 
-    df["DATE"] = fecha.strftime("%Y-%m-%d")
-    df["DATETIME"] = (
-        pd.to_datetime(fecha) +
-        pd.to_timedelta((df["PERIOD"] - 1) * 15, unit="min")
-    ).dt.strftime("%Y-%m-%d %H:%M:%S")
+    # Validaciones de calidad
+    if df["PRICE_SP"].isna().any() or df["PRICE_PT"].isna().any():
+        return None
 
-    # Corrección x100 si hiciera falta
-    mean_sp = df["PRICE_SP"].dropna().mean()
-    mean_pt = df["PRICE_PT"].dropna().mean()
+    if df["PRICE_SP"].max() > 1000 or df["PRICE_SP"].min() < -500:
+        return None
+
+    if df["PRICE_PT"].max() > 1000 or df["PRICE_PT"].min() < -500:
+        return None
+
+    # Corregir x100 si hace falta
+    mean_sp = df["PRICE_SP"].mean()
+    mean_pt = df["PRICE_PT"].mean()
 
     if pd.notna(mean_sp) and mean_sp > 500:
         df["PRICE_SP"] = df["PRICE_SP"] / 100
@@ -148,7 +158,11 @@ def parsear_marginalpdbc(texto, fecha):
     df["PRICE_SP"] = df["PRICE_SP"].round(2)
     df["PRICE_PT"] = df["PRICE_PT"].round(2)
 
+    df["DATE"] = fecha.strftime("%Y-%m-%d")
+    df["DATETIME"] = df["PERIOD"].apply(lambda p: formatear_datetime_local_15min(fecha, p))
+
     return df[["DATETIME", "DATE", "PERIOD", "PRICE_SP", "PRICE_PT"]]
+
 
 def obtener_ultima_fecha():
     if os.path.exists(OUTPUT_15MIN):
@@ -157,9 +171,10 @@ def obtener_ultima_fecha():
             return pd.to_datetime(df["DATE"]).max().date()
     return None
 
+
 if __name__ == "__main__":
     print("=" * 60)
-    print("OMIE 15 minutos v3 - CORREGIDO")
+    print("OMIE 15 minutos v4 - corregido")
     print("=" * 60)
 
     os.makedirs("data", exist_ok=True)
@@ -201,7 +216,7 @@ if __name__ == "__main__":
                 texto = r.content.decode("latin-1", errors="replace")
                 df_dia = parsear_marginalpdbc(texto, fecha_actual)
 
-                if df_dia is not None and len(df_dia) == 96:
+                if df_dia is not None and len(df_dia) in (92, 96, 100):
                     todos.append(df_dia)
                     dias_ok += 1
 
@@ -231,8 +246,8 @@ if __name__ == "__main__":
 
         df_final = (
             df_final
-            .drop_duplicates("DATETIME", keep="last")
-            .sort_values("DATETIME")
+            .drop_duplicates(subset=["DATE", "PERIOD"], keep="last")
+            .sort_values(["DATE", "PERIOD"])
             .reset_index(drop=True)
         )
 
@@ -243,4 +258,4 @@ if __name__ == "__main__":
     else:
         print("No se descargaron datos.")
 
-    print("\nScript 04 v3 completado.")
+    print("\nScript 04 v4 completado.")
