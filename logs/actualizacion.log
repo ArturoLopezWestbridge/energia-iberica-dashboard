@@ -5525,3 +5525,43 @@
 [2026-04-15 13:39:04]    Script 04 v2 completado.
 [2026-04-15 13:39:04] ==================================================
 [2026-04-15 13:39:04] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
+[2026-04-16 09:15:57] ==================================================
+[2026-04-16 09:15:57] 🚀 INICIO - Actualización diaria mercado ibérico
+[2026-04-16 09:15:57] ==================================================
+[2026-04-16 09:15:57] ▶️  Ejecutando: scripts/01_descarga_omie.py
+[2026-04-16 09:15:59] ✅ scripts/01_descarga_omie.py completado correctamente
+[2026-04-16 09:15:59]    ============================================================
+[2026-04-16 09:15:59]    OMIE Spot v4 - FIX 15MIN
+[2026-04-16 09:15:59]    ============================================================
+[2026-04-16 09:15:59]    Horario reconstruido: 4,656
+[2026-04-16 09:15:59]    Diario reconstruido: 194
+[2026-04-16 09:15:59]    
+[2026-04-16 09:15:59]    Script completado correctamente.
+[2026-04-16 09:15:59] ▶️  Ejecutando: scripts/02_descarga_omip.py
+[2026-04-16 09:17:38] ✅ scripts/02_descarga_omip.py completado correctamente
+[2026-04-16 09:17:38]    ============================================================
+[2026-04-16 09:17:38]    OMIP - Descarga de Futuros (v2 - bloques de 90 días)
+[2026-04-16 09:17:38]    ============================================================
+[2026-04-16 09:17:38]    📥 Primera ejecución. Empezando desde 2019-01-02
+[2026-04-16 09:17:38]    ⬇️  Descargando: 2019-01-02 → 2019-04-02
+[2026-04-16 09:17:38]    📊 Días con datos: 0
+[2026-04-16 09:17:38]    ℹ️  Sin datos nuevos.
+[2026-04-16 09:17:38]    📌 Progreso guardado: 2019-04-03
+[2026-04-16 09:17:38]    
+[2026-04-16 09:17:38]    ⚠️  Quedan datos desde 2019-04-03 — vuelve a ejecutar el workflow.
+[2026-04-16 09:17:38]    
+[2026-04-16 09:17:38]    ✅ Script 02 completado.
+[2026-04-16 09:17:38] ▶️  Ejecutando: scripts/04_descarga_omie_15min.py
+[2026-04-16 09:17:39] ✅ scripts/04_descarga_omie_15min.py completado correctamente
+[2026-04-16 09:17:39]    ============================================================
+[2026-04-16 09:17:39]    OMIE 15 minutos v2 - marginalpdbc format
+[2026-04-16 09:17:39]    ============================================================
+[2026-04-16 09:17:39]    Continuando desde: 2026-04-15
+[2026-04-16 09:17:39]    Descargando: 2026-04-15 -> 2026-04-15
+[2026-04-16 09:17:39]    Dias OK: 1 | Sin datos: 0
+[2026-04-16 09:17:39]    Guardado data/omie_spot_15min.csv: 18,716 filas
+[2026-04-16 09:17:39]    Periodo: 2025-10-01 -> 2026-04-15
+[2026-04-16 09:17:39]    
+[2026-04-16 09:17:39]    Script 04 v2 completado.
+[2026-04-16 09:17:39] ==================================================
+[2026-04-16 09:17:39] ✅ TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE
