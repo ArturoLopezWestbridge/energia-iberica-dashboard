@@ -46,8 +46,14 @@ def asegurar_datetime_col(df, col):
 
 
 def formatear_datetime_local_hora(fecha, hour):
+    fecha = pd.to_datetime(fecha)
     hora_cero = int(hour) - 1
-    return f"{pd.to_datetime(fecha).strftime('%Y-%m-%d')} {hora_cero:02d}:00:00"
+
+    if hora_cero == 24:
+        # hora 25 → siguiente día 00:00
+        return (fecha + pd.Timedelta(days=1)).strftime("%Y-%m-%d 00:00:00")
+    else:
+        return f"{fecha.strftime('%Y-%m-%d')} {hora_cero:02d}:00:00"
 
 
 def aplicar_fixes_diario_sp(df_d):
