@@ -21,7 +21,7 @@ OUTPUT_15MIN = "data/omie_spot_15min.csv"
 FECHA_INICIO_15MIN = dt.date(2025, 10, 1)
 
 # PONER EN TRUE UNA VEZ PARA REHACER TODO EL HISTORICO
-RECONSTRUIR_COMPLETO = True
+RECONSTRUIR_COMPLETO = False
 
 HEADERS_WEB = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
