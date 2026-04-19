@@ -1,104 +1,40 @@
-import pandas as pd
 import os
+import sys
+import subprocess
+import datetime as dt
 
-# ----------------------------
-# PATHS (ajustados a /scripts/)
-# ----------------------------
-CSV_PATH = "../data/omip_futuros.csv"
-EXCEL_TEMPLATE = "../inputs/OMIP_Template.xlsx"
-OUTPUT_PATH = "../data/OMIP_actualizado.xlsx"
+def run_script(script_path):
+    print(f"\n=== Ejecutando: {script_path} ===")
+    result = subprocess.run([sys.executable, script_path], capture_output=True, text=True)
 
-# ----------------------------
-# LIMPIAR NOMBRE DE CONTRATO
-# ----------------------------
-def limpiar_contrato(c):
-    if pd.isna(c):
-        return None
+    print(result.stdout)
 
-    c = str(c).upper()
+    if result.returncode != 0:
+        print(result.stderr)
+        raise Exception(f"Error ejecutando {script_path}")
 
-    # Quitar prefijos típicos OMIP
-    c = c.replace("FTB M ", "")
-    c = c.replace("FTB Q ", "")
-    c = c.replace("FTB CAL ", "")
-    c = c.replace("FTB YR ", "")
-
-    return c.title().strip()
-
-# ----------------------------
-# MAIN
-# ----------------------------
 def main():
+    print("=" * 60)
+    print("PIPELINE MERCADO IBÉRICO - ACTUALIZACIÓN COMPLETA")
+    print(f"Fecha ejecución: {dt.datetime.now()}")
+    print("=" * 60)
 
-    # 1. Leer histórico Excel
-    if not os.path.exists(EXCEL_TEMPLATE):
-        raise Exception(f"No existe: {EXCEL_TEMPLATE}")
+    # 1. OMIE diario
+    run_script("scripts/01_descarga_omie.py")
 
-    df_hist = pd.read_excel(EXCEL_TEMPLATE)
+    # 2. OMIP futuros (descarga incremental)
+    run_script("scripts/02_descarga_omip.py")
 
-    if "Date" not in df_hist.columns:
-        raise Exception("El Excel debe tener columna 'Date'")
+    # 3. OMIE 15min (si aplica en tu flujo)
+    if os.path.exists("scripts/04_descarga_omie_15min.py"):
+        run_script("scripts/04_descarga_omie_15min.py")
 
-    df_hist["Date"] = pd.to_datetime(df_hist["Date"], dayfirst=True)
+    # 4. Consolidación OMIP → Excel final
+    run_script("scripts/05_consolidar_omip.py")
 
-    print(f"Histórico cargado: {len(df_hist)} filas")
-
-    # 2. Leer CSV OMIP
-    if not os.path.exists(CSV_PATH):
-        raise Exception(f"No existe: {CSV_PATH}")
-
-    df = pd.read_csv(CSV_PATH)
-
-    if "TRADE_DATE" not in df.columns:
-        raise Exception("CSV sin columna TRADE_DATE")
-
-    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
-
-    # Detectar columna de precio automáticamente
-    posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
-    if not posibles:
-        raise Exception("No se encontró columna de precio (SETTLEMENT/PRICE)")
-
-    PRECIO_COL = posibles[0]
-    print(f"Usando columna precio: {PRECIO_COL}")
-
-    df = df[["TRADE_DATE", "CONTRATO", PRECIO_COL]].copy()
-
-    # 3. Limpiar contratos
-    df["CONTRATO"] = df["CONTRATO"].apply(limpiar_contrato)
-
-    # 4. Pivot (fechas vs contratos)
-    pivot = df.pivot(index="TRADE_DATE", columns="CONTRATO", values=PRECIO_COL)
-
-    pivot = pivot.reset_index().rename(columns={"TRADE_DATE": "Date"})
-
-    print(f"Pivot generado: {pivot.shape}")
-
-    # 5. Merge con histórico
-    df_final = pd.concat([df_hist, pivot], ignore_index=True)
-
-    df_final = df_final.drop_duplicates(subset=["Date"], keep="last")
-    df_final = df_final.sort_values("Date")
-
-    print(f"Total fechas tras merge: {len(df_final)}")
-
-    # 6. Rellenar calendario completo (incluye fines de semana)
-    df_final = df_final.set_index("Date").asfreq("D")
-
-    # Forward fill (precios)
-    df_final = df_final.ffill()
-
-    df_final = df_final.reset_index()
-
-    print("Fines de semana rellenados")
-
-    # 7. Guardar Excel
-    os.makedirs("../data", exist_ok=True)
-
-    df_final.to_excel(OUTPUT_PATH, index=False)
-
-    print(f"Excel actualizado guardado en: {OUTPUT_PATH}")
-
+    print("\n" + "=" * 60)
+    print("PIPELINE COMPLETADO CORRECTAMENTE")
+    print("=" * 60)
 
 if __name__ == "__main__":
     main()
