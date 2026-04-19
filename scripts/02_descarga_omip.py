@@ -15,8 +15,10 @@ START_DATE = dt.date(2019, 1, 1)
 MAX_DIAS_POR_EJECUCION = 3
 BASE_URL = "https://www.omip.pt/es/dados-mercado"
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                  "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+    ),
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
 }
 
@@ -51,40 +53,18 @@ def flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
             col_name = " ".join(parts)
         else:
             col_name = str(col).strip()
+
         col_name = re.sub(r"\s+", " ", col_name)
         cols.append(col_name)
+
     df.columns = cols
     return df
-
-
-def find_contract_col(columns) -> str | None:
-    for col in columns:
-        c = col.lower()
-        if "contract" in c and "name" in c:
-            return col
-    return None
-
-
-def find_d_col(columns) -> str | None:
-    for col in columns:
-        c = col.lower()
-        if "d-1" in c:
-            continue
-        if re.search(r"(^|\s)d\s*\(", c):
-            return col
-    return None
-
-
-def find_d1_col(columns) -> str | None:
-    for col in columns:
-        if "d-1" in col.lower():
-            return col
-    return None
 
 
 def parse_price(value):
     if pd.isna(value):
         return None
+
     if isinstance(value, (int, float)):
         return float(value)
 
@@ -92,7 +72,7 @@ def parse_price(value):
     if s in NA_VALUES:
         return None
 
-    s = re.sub(r"[^0-9,.-]", "", s)
+    s = re.sub(r"[^0-9,.\-]", "", s)
     if not s:
         return None
 
@@ -131,6 +111,53 @@ def contract_to_excel_header(contract_name: str) -> str | None:
     return None
 
 
+def find_contract_col(df: pd.DataFrame) -> str | None:
+    best_col = None
+    best_hits = 0
+
+    for col in df.columns:
+        s = df[col].astype(str).str.strip().str.upper()
+        hits = s.str.contains(r"^(FTB|FPB)\b", regex=True, na=False).sum()
+
+        if hits > best_hits:
+            best_hits = hits
+            best_col = col
+
+    return best_col if best_hits > 0 else None
+
+
+def find_price_cols(df: pd.DataFrame, contract_col: str) -> tuple[str | None, str | None]:
+    candidates = []
+
+    for col in df.columns:
+        if col == contract_col:
+            continue
+
+        parsed = df[col].apply(parse_price)
+        non_null = parsed.notna().sum()
+
+        if non_null > 0:
+            candidates.append((col, non_null))
+
+    if not candidates:
+        return None, None
+
+    ordered_cols = list(df.columns)
+    candidates.sort(key=lambda x: (x[1], ordered_cols.index(x[0])), reverse=True)
+
+    d_col = candidates[0][0] if len(candidates) >= 1 else None
+    d1_col = candidates[1][0] if len(candidates) >= 2 else None
+
+    for col, _ in candidates:
+        c = str(col).lower()
+        if "d-1" in c:
+            d1_col = col
+        elif re.search(r"(^|\s)d(\s|$|\()", c):
+            d_col = col
+
+    return d_col, d1_col
+
+
 def extract_tables_from_html(html: str) -> pd.DataFrame:
     try:
         tables = pd.read_html(StringIO(html))
@@ -144,24 +171,29 @@ def extract_tables_from_html(html: str) -> pd.DataFrame:
             continue
 
         table = flatten_columns(table)
-        contract_col = find_contract_col(table.columns)
-        d_col = find_d_col(table.columns)
-        d1_col = find_d1_col(table.columns)
 
-        if not contract_col or (not d_col and not d1_col):
+        contract_col = find_contract_col(table)
+        if not contract_col:
+            continue
+
+        d_col, d1_col = find_price_cols(table, contract_col)
+        if not d_col and not d1_col:
             continue
 
         tmp = pd.DataFrame()
         tmp["CONTRACT_NAME"] = table[contract_col].astype(str).str.strip()
-        tmp = tmp[tmp["CONTRACT_NAME"].str.startswith("FTB", na=False)].copy()
+        tmp = tmp[tmp["CONTRACT_NAME"].str.contains(r"^(FTB|FPB)\b", regex=True, na=False)].copy()
+
+        if tmp.empty:
+            continue
 
         if d_col:
-            tmp["PRICE_D"] = table[d_col].apply(parse_price)
+            tmp["PRICE_D"] = table.loc[tmp.index, d_col].apply(parse_price)
         else:
             tmp["PRICE_D"] = None
 
         if d1_col:
-            tmp["PRICE_D_1"] = table[d1_col].apply(parse_price)
+            tmp["PRICE_D_1"] = table.loc[tmp.index, d1_col].apply(parse_price)
         else:
             tmp["PRICE_D_1"] = None
 
@@ -229,24 +261,28 @@ def descargar_dia(fecha: dt.date, session: requests.Session) -> pd.DataFrame:
 
     print(f"  Filas con precio {fecha}: {len(df)}")
 
-    return df[[
-        "TRADE_DATE",
-        "ZONE",
-        "CONTRACT_NAME",
-        "EXCEL_HEADER",
-        "PRICE_D",
-        "PRICE_D_1",
-        "PRICE_USED",
-        "PRICE_SOURCE",
-    ]]
+    return df[
+        [
+            "TRADE_DATE",
+            "ZONE",
+            "CONTRACT_NAME",
+            "EXCEL_HEADER",
+            "PRICE_D",
+            "PRICE_D_1",
+            "PRICE_USED",
+            "PRICE_SOURCE",
+        ]
+    ]
 
 
 def leer_csv_existente() -> pd.DataFrame | None:
     if not os.path.exists(OUTPUT_PATH):
         return None
+
     df = pd.read_csv(OUTPUT_PATH)
     if "TRADE_DATE" in df.columns and not df.empty:
         df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
+
     return df
 
 
@@ -311,8 +347,8 @@ def main():
         if not df_dia.empty:
             frames.append(df_dia)
             dias_ok += 1
-            if dias_ok % 10 == 0:
-                print(f"  {dias_ok} días con datos. Último: {fecha_actual}")
+            print(f"  Día con datos: {fecha_actual} | filas={len(df_dia)}")
+
         time.sleep(0.35)
         fecha_actual += dt.timedelta(days=1)
 
