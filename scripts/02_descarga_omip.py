@@ -1,134 +1,319 @@
-"""
-Script 02 - Descarga de futuros OMIP
-Versión 2 - Descarga por bloques para evitar timeout en GitHub Actions
-"""
-
-import requests
-import pandas as pd
 import os
-import datetime as dt
+import re
 import time
+import datetime as dt
 from io import StringIO
 
-OUTPUT_PATH = "data/omip_futuros.csv"
+import pandas as pd
+import requests
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if "__file__" in globals() else os.getcwd()
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es.csv")
+PROGRESS_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es_progreso.txt")
+
+START_DATE = dt.date(2019, 1, 1)
+MAX_DIAS_POR_EJECUCION = 60
+BASE_URL = "https://www.omip.pt/es/dados-mercado"
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                  "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
 }
-MAX_DIAS_POR_EJECUCION = 90
 
-def obtener_fecha_inicio():
-    if os.path.exists(OUTPUT_PATH):
-        df = pd.read_csv(OUTPUT_PATH)
-        if "TRADE_DATE" in df.columns and len(df) > 0:
-            ultima = pd.to_datetime(df["TRADE_DATE"]).max()
-            fecha_inicio = ultima + dt.timedelta(days=1)
-            print(f"✅ CSV existente. Continuando desde: {fecha_inicio.date()}")
-            return df, fecha_inicio
-    print(f"📥 Primera ejecución. Empezando desde 2019-01-02")
-    return None, dt.datetime(2019, 1, 2)
+MONTH_MAP_OMIP_TO_EXCEL = {
+    "JAN": "Jan",
+    "FEB": "Feb",
+    "MAR": "Mrz",
+    "APR": "Apr",
+    "MAY": "Mai",
+    "JUN": "Jun",
+    "JUL": "Jul",
+    "AUG": "Aug",
+    "SEP": "Sep",
+    "OCT": "Okt",
+    "NOV": "Nov",
+    "DEC": "Dez",
+}
 
-def descargar_dia(fecha):
-    fecha_str = fecha.strftime("%Y%m%d")
-    fecha_display = fecha.strftime("%Y-%m-%d")
-    urls = [
-        f"https://www.omip.pt/sites/default/files/dados_mercado/{fecha_str}_EL.csv",
-        f"https://www.omip.pt/sites/default/files/dados_mercado/{fecha_str}_EL_v2.csv",
-    ]
-    for url in urls:
-        try:
-            r = requests.get(url, headers=HEADERS, timeout=10)
-            if r.status_code == 200 and len(r.content) > 100:
-                try:
-                    df = pd.read_csv(StringIO(r.text), sep=";", decimal=",")
-                    if len(df) > 0:
-                        df["TRADE_DATE"] = fecha_display
-                        return df
-                except Exception:
-                    pass
-        except Exception:
-            pass
+NA_VALUES = {"", "-", "--", "n.a.", "n.a", "na", "nan", "none"}
+
+
+def flatten_columns(df: pd.DataFrame) -> pd.DataFrame:
+    cols = []
+    for col in df.columns:
+        if isinstance(col, tuple):
+            parts = []
+            for part in col:
+                part = str(part).strip()
+                if not part or part.lower().startswith("unnamed"):
+                    continue
+                parts.append(part)
+            col_name = " ".join(parts)
+        else:
+            col_name = str(col).strip()
+        col_name = re.sub(r"\s+", " ", col_name)
+        cols.append(col_name)
+    df.columns = cols
+    return df
+
+
+def find_contract_col(columns) -> str | None:
+    for col in columns:
+        c = col.lower()
+        if "contract" in c and "name" in c:
+            return col
     return None
 
-def clasificar_producto(contrato):
-    if pd.isna(contrato):
-        return "UNKNOWN"
-    c = str(contrato).upper()
-    if "CAL" in c or "YR" in c: return "ANUAL"
-    elif "Q" in c and any(str(i) in c for i in range(1,5)): return "TRIMESTRAL"
-    elif "WE" in c or "WEEKEND" in c: return "FIN_DE_SEMANA"
-    elif "WK" in c or "WEEK" in c: return "SEMANAL"
-    elif "M" in c: return "MENSUAL"
-    else: return "OTRO"
 
-def descargar_bloque(fecha_inicio, fecha_fin):
-    todos = []
+def find_d_col(columns) -> str | None:
+    for col in columns:
+        c = col.lower()
+        if "d-1" in c:
+            continue
+        if re.search(r"(^|\s)d\s*\(", c):
+            return col
+    return None
+
+
+def find_d1_col(columns) -> str | None:
+    for col in columns:
+        if "d-1" in col.lower():
+            return col
+    return None
+
+
+def parse_price(value):
+    if pd.isna(value):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    s = str(value).strip().lower()
+    if s in NA_VALUES:
+        return None
+
+    s = re.sub(r"[^0-9,.-]", "", s)
+    if not s:
+        return None
+
+    if "," in s and "." in s:
+        if s.rfind(",") > s.rfind("."):
+            s = s.replace(".", "").replace(",", ".")
+        else:
+            s = s.replace(",", "")
+    elif "," in s:
+        s = s.replace(",", ".")
+
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def contract_to_excel_header(contract_name: str) -> str | None:
+    c = re.sub(r"\s+", " ", str(contract_name).upper()).strip()
+
+    m = re.search(r"FTB\s+M\s+([A-Z]{3})[- ]?(\d{2})", c)
+    if m:
+        month = MONTH_MAP_OMIP_TO_EXCEL.get(m.group(1))
+        year = m.group(2)
+        if month:
+            return f"{month} {year}"
+
+    q = re.search(r"FTB\s+Q([1-4])[- ]?(\d{2})", c)
+    if q:
+        return f"Q{q.group(1)} {q.group(2)}"
+
+    y = re.search(r"FTB\s+(?:CAL|YR)[- ]?(\d{2})", c)
+    if y:
+        return f"Cal {y.group(1)}"
+
+    return None
+
+
+def extract_tables_from_html(html: str) -> pd.DataFrame:
+    try:
+        tables = pd.read_html(StringIO(html))
+    except ValueError:
+        return pd.DataFrame()
+
+    extracted = []
+
+    for table in tables:
+        if table.empty:
+            continue
+
+        table = flatten_columns(table)
+        contract_col = find_contract_col(table.columns)
+        d_col = find_d_col(table.columns)
+        d1_col = find_d1_col(table.columns)
+
+        if not contract_col or (not d_col and not d1_col):
+            continue
+
+        tmp = pd.DataFrame()
+        tmp["CONTRACT_NAME"] = table[contract_col].astype(str).str.strip()
+        tmp = tmp[tmp["CONTRACT_NAME"].str.startswith("FTB", na=False)].copy()
+
+        if d_col:
+            tmp["PRICE_D"] = table[d_col].apply(parse_price)
+        else:
+            tmp["PRICE_D"] = None
+
+        if d1_col:
+            tmp["PRICE_D_1"] = table[d1_col].apply(parse_price)
+        else:
+            tmp["PRICE_D_1"] = None
+
+        tmp["EXCEL_HEADER"] = tmp["CONTRACT_NAME"].apply(contract_to_excel_header)
+        tmp = tmp[tmp["EXCEL_HEADER"].notna()].copy()
+
+        if not tmp.empty:
+            extracted.append(tmp)
+
+    if not extracted:
+        return pd.DataFrame()
+
+    out = pd.concat(extracted, ignore_index=True)
+    out = out.drop_duplicates(subset=["CONTRACT_NAME"], keep="first")
+    return out
+
+
+def descargar_dia(fecha: dt.date, session: requests.Session) -> pd.DataFrame:
+    params = {
+        "date": fecha.isoformat(),
+        "product": "EL",
+        "zone": "ES",
+        "instrument": "FTB",
+    }
+
+    try:
+        response = session.get(BASE_URL, params=params, headers=HEADERS, timeout=30)
+        response.raise_for_status()
+    except Exception as exc:
+        print(f"  Error HTTP {fecha}: {exc}")
+        return pd.DataFrame()
+
+    df = extract_tables_from_html(response.text)
+    if df.empty:
+        return df
+
+    df["TRADE_DATE"] = pd.Timestamp(fecha)
+    df["ZONE"] = "ES"
+    df["PRICE_USED"] = df["PRICE_D"]
+    df["PRICE_SOURCE"] = "D"
+
+    mask = df["PRICE_USED"].isna() & df["PRICE_D_1"].notna()
+    df.loc[mask, "PRICE_USED"] = df.loc[mask, "PRICE_D_1"]
+    df.loc[mask, "PRICE_SOURCE"] = "D-1"
+
+    df = df[df["PRICE_USED"].notna()].copy()
+    df = df.drop_duplicates(subset=["TRADE_DATE", "EXCEL_HEADER"], keep="first")
+
+    return df[[
+        "TRADE_DATE",
+        "ZONE",
+        "CONTRACT_NAME",
+        "EXCEL_HEADER",
+        "PRICE_D",
+        "PRICE_D_1",
+        "PRICE_USED",
+        "PRICE_SOURCE",
+    ]]
+
+
+def leer_csv_existente() -> pd.DataFrame | None:
+    if not os.path.exists(OUTPUT_PATH):
+        return None
+    df = pd.read_csv(OUTPUT_PATH)
+    if "TRADE_DATE" in df.columns and not df.empty:
+        df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
+    return df
+
+
+def obtener_fecha_inicio(df_existente: pd.DataFrame | None) -> dt.date:
+    if os.path.exists(PROGRESS_PATH):
+        with open(PROGRESS_PATH, "r", encoding="utf-8") as f:
+            return dt.datetime.strptime(f.read().strip(), "%Y-%m-%d").date()
+
+    if df_existente is not None and not df_existente.empty and "TRADE_DATE" in df_existente.columns:
+        ultima = pd.to_datetime(df_existente["TRADE_DATE"]).max().date()
+        return ultima + dt.timedelta(days=1)
+
+    return START_DATE
+
+
+def guardar(df_nuevo: pd.DataFrame | None, df_existente: pd.DataFrame | None):
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+
+    if df_nuevo is None or df_nuevo.empty:
+        print("Sin datos nuevos para guardar.")
+        return
+
+    if df_existente is not None and not df_existente.empty:
+        df_final = pd.concat([df_existente, df_nuevo], ignore_index=True)
+    else:
+        df_final = df_nuevo.copy()
+
+    df_final["TRADE_DATE"] = pd.to_datetime(df_final["TRADE_DATE"])
+    df_final = df_final.drop_duplicates(subset=["TRADE_DATE", "EXCEL_HEADER"], keep="last")
+    df_final = df_final.sort_values(["TRADE_DATE", "EXCEL_HEADER"]).reset_index(drop=True)
+    df_final.to_csv(OUTPUT_PATH, index=False)
+
+    print(f"Guardado: {OUTPUT_PATH} | Filas: {len(df_final):,}")
+
+
+def guardar_progreso(fecha: dt.date):
+    os.makedirs(os.path.dirname(PROGRESS_PATH), exist_ok=True)
+    with open(PROGRESS_PATH, "w", encoding="utf-8") as f:
+        f.write(fecha.strftime("%Y-%m-%d"))
+    print(f"Progreso guardado: {fecha}")
+
+
+def main():
+    print("=" * 60)
+    print("OMIP ES - Descarga histórica pública")
+    print("=" * 60)
+
+    df_existente = leer_csv_existente()
+    fecha_inicio = obtener_fecha_inicio(df_existente)
+    hoy = dt.date.today()
+    fecha_fin = min(fecha_inicio + dt.timedelta(days=MAX_DIAS_POR_EJECUCION - 1), hoy)
+
+    print(f"Descargando: {fecha_inicio} -> {fecha_fin}")
+
+    session = requests.Session()
+    frames = []
     dias_ok = 0
     fecha_actual = fecha_inicio
-    hoy = dt.datetime.today()
-    print(f"⬇️  Descargando: {fecha_inicio.date()} → {fecha_fin.date()}")
-    while fecha_actual <= fecha_fin and fecha_actual < hoy:
-        if fecha_actual.weekday() < 5:
-            df_dia = descargar_dia(fecha_actual)
-            if df_dia is not None:
-                todos.append(df_dia)
-                dias_ok += 1
-                if dias_ok % 10 == 0:
-                    print(f"  ✅ {dias_ok} días OK... último: {fecha_actual.date()}")
-            time.sleep(0.3)
+
+    while fecha_actual <= fecha_fin:
+        df_dia = descargar_dia(fecha_actual, session)
+        if not df_dia.empty:
+            frames.append(df_dia)
+            dias_ok += 1
+            if dias_ok % 10 == 0:
+                print(f"  {dias_ok} días con datos. Último: {fecha_actual}")
+        time.sleep(0.35)
         fecha_actual += dt.timedelta(days=1)
-    print(f"📊 Días con datos: {dias_ok}")
-    if todos:
-        df = pd.concat(todos, ignore_index=True)
-        col = next((c for c in df.columns if "contract" in c.lower()), None)
-        if col:
-            df = df.rename(columns={col: "CONTRATO"})
-            df["TIPO_PRODUCTO"] = df["CONTRATO"].apply(clasificar_producto)
-        return df, fecha_actual
-    return None, fecha_actual
 
-def guardar(df_nuevo, df_existente):
-    os.makedirs("data", exist_ok=True)
-    if df_existente is not None and df_nuevo is not None:
-        df_final = pd.concat([df_existente, df_nuevo], ignore_index=True)
-        keys = [c for c in ["TRADE_DATE","CONTRATO"] if c in df_final.columns]
-        if keys: df_final = df_final.drop_duplicates(subset=keys, keep="last")
-        df_final = df_final.sort_values("TRADE_DATE").reset_index(drop=True)
-    elif df_nuevo is not None:
-        df_final = df_nuevo
+    print(f"Días con datos: {dias_ok}")
+
+    if frames:
+        df_nuevo = pd.concat(frames, ignore_index=True)
+        guardar(df_nuevo, df_existente)
     else:
-        print("ℹ️  Sin datos nuevos."); return
-    df_final.to_csv(OUTPUT_PATH, index=False)
-    print(f"💾 Guardado: {OUTPUT_PATH} | Filas: {len(df_final):,}")
+        print("Sin datos nuevos.")
 
-def guardar_progreso(fecha):
-    os.makedirs("data", exist_ok=True)
-    with open("data/omip_progreso.txt","w") as f: f.write(fecha.strftime("%Y-%m-%d"))
-    print(f"📌 Progreso guardado: {fecha.date()}")
+    siguiente = fecha_fin + dt.timedelta(days=1)
+    if siguiente <= hoy:
+        guardar_progreso(siguiente)
+        print(f"Quedan datos desde {siguiente}. Vuelve a ejecutar el workflow.")
+    else:
+        if os.path.exists(PROGRESS_PATH):
+            os.remove(PROGRESS_PATH)
+        print("Descarga completada.")
 
-def leer_progreso():
-    if os.path.exists("data/omip_progreso.txt"):
-        with open("data/omip_progreso.txt","r") as f:
-            return dt.datetime.strptime(f.read().strip(), "%Y-%m-%d")
-    return None
 
 if __name__ == "__main__":
-    print("="*60)
-    print("OMIP - Descarga de Futuros (v2 - bloques de 90 días)")
-    print("="*60)
-    hoy = dt.datetime.today()
-    df_existente, fecha_inicio = obtener_fecha_inicio()
-    progreso = leer_progreso()
-    if progreso and progreso > fecha_inicio:
-        print(f"🔄 Continuando desde: {progreso.date()}")
-        fecha_inicio = progreso
-    fecha_fin = min(fecha_inicio + dt.timedelta(days=MAX_DIAS_POR_EJECUCION), hoy - dt.timedelta(days=1))
-    hay_mas = fecha_fin < hoy - dt.timedelta(days=2)
-    df_nuevo, fecha_hasta = descargar_bloque(fecha_inicio, fecha_fin)
-    guardar(df_nuevo, df_existente)
-    if hay_mas:
-        guardar_progreso(fecha_hasta)
-        print(f"\n⚠️  Quedan datos desde {fecha_hasta.date()} — vuelve a ejecutar el workflow.")
-    else:
-        if os.path.exists("data/omip_progreso.txt"): os.remove("data/omip_progreso.txt")
-        print("\n✅ Descarga OMIP completada.")
-    print("\n✅ Script 02 completado.")
+    main()
