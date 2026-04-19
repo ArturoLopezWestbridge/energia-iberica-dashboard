@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 # ----------------------------
-# PATHS ROBUSTOS (clave)
+# PATHS ROBUSTOS
 # ----------------------------
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -48,29 +48,32 @@ def main():
 
     print(f"Histórico cargado: {len(df_hist)} filas")
 
-    # 2. Leer CSV OMIP
- 
-if not os.path.exists(CSV_PATH):
-    print("No existe CSV OMIP. Usando solo histórico.")
-    
-    df_final = df_hist.copy()
+    # ----------------------------
+    # 2. Si NO hay CSV → usar solo histórico
+    # ----------------------------
+    if not os.path.exists(CSV_PATH):
+        print("No existe CSV OMIP. Usando solo histórico.")
 
-    df_final = df_final.set_index("Date").asfreq("D")
-    df_final = df_final.ffill()
-    df_final = df_final.reset_index()
+        df_final = df_hist.copy()
 
-    df_final.to_excel(OUTPUT_PATH, index=False)
+        df_final = df_final.set_index("Date").asfreq("D")
+        df_final = df_final.ffill()
+        df_final = df_final.reset_index()
 
-    print(f"Excel generado solo con histórico: {OUTPUT_PATH}")
-    return
+        df_final.to_excel(OUTPUT_PATH, index=False)
 
-# Esto va FUERA del if
-df = pd.read_csv(CSV_PATH)
+        print(f"Excel generado solo con histórico: {OUTPUT_PATH}")
+        return
 
-if "TRADE_DATE" not in df.columns:
-    raise Exception("CSV sin columna TRADE_DATE")
+    # ----------------------------
+    # 3. Leer CSV OMIP
+    # ----------------------------
+    df = pd.read_csv(CSV_PATH)
 
-df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
+    if "TRADE_DATE" not in df.columns:
+        raise Exception("CSV sin columna TRADE_DATE")
+
+    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
 
     # Detectar columna de precio
     posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
@@ -82,17 +85,23 @@ df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
 
     df = df[["TRADE_DATE", "CONTRATO", PRECIO_COL]].copy()
 
-    # 3. Limpiar contratos
+    # ----------------------------
+    # 4. Limpiar contratos
+    # ----------------------------
     df["CONTRATO"] = df["CONTRATO"].apply(limpiar_contrato)
 
-    # 4. Pivot
+    # ----------------------------
+    # 5. Pivot
+    # ----------------------------
     pivot = df.pivot(index="TRADE_DATE", columns="CONTRATO", values=PRECIO_COL)
 
     pivot = pivot.reset_index().rename(columns={"TRADE_DATE": "Date"})
 
     print(f"Pivot generado: {pivot.shape}")
 
-    # 5. Merge con histórico
+    # ----------------------------
+    # 6. Merge con histórico
+    # ----------------------------
     df_final = pd.concat([df_hist, pivot], ignore_index=True)
 
     df_final = df_final.drop_duplicates(subset=["Date"], keep="last")
@@ -100,14 +109,18 @@ df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
 
     print(f"Total fechas tras merge: {len(df_final)}")
 
-    # 6. Rellenar calendario (incluye fines de semana)
+    # ----------------------------
+    # 7. Rellenar calendario
+    # ----------------------------
     df_final = df_final.set_index("Date").asfreq("D")
     df_final = df_final.ffill()
     df_final = df_final.reset_index()
 
     print("Fines de semana rellenados")
 
-    # 7. Guardar
+    # ----------------------------
+    # 8. Guardar
+    # ----------------------------
     os.makedirs(os.path.join(BASE_DIR, "data"), exist_ok=True)
 
     df_final.to_excel(OUTPUT_PATH, index=False)
