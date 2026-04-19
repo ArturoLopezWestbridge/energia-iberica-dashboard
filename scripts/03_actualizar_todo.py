@@ -1,78 +1,104 @@
-"""
-Script 03 - Actualizador maestro (ORDEN CORREGIDO)
-Ejecuta todos los scripts de descarga en orden
-y genera un log de la ejecución.
-Diseñado para correr diariamente via GitHub Actions.
-
-ORDEN NUEVO:
-1) 04_descarga_omie_15min.py   -> actualiza 15min primero
-2) 01_descarga_omie.py         -> reconstruye horario/diario usando el 15min ya actualizado
-3) 02_descarga_omip.py         -> futuros
-"""
-
-import subprocess
-import sys
-import datetime as dt
+import pandas as pd
 import os
 
-LOG_PATH = "logs/actualizacion.log"
+# ----------------------------
+# PATHS (ajustados a /scripts/)
+# ----------------------------
+CSV_PATH = "../data/omip_futuros.csv"
+EXCEL_TEMPLATE = "../inputs/OMIP_Template.xlsx"
+OUTPUT_PATH = "../data/OMIP_actualizado.xlsx"
 
-SCRIPTS = [
-    "scripts/04_descarga_omie_15min.py",
-    "scripts/01_descarga_omie.py",
-    "scripts/02_descarga_omip.py",
-]
+# ----------------------------
+# LIMPIAR NOMBRE DE CONTRATO
+# ----------------------------
+def limpiar_contrato(c):
+    if pd.isna(c):
+        return None
 
-def log(mensaje):
-    timestamp = dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    linea = f"[{timestamp}] {mensaje}"
-    print(linea)
-    os.makedirs("logs", exist_ok=True)
-    with open(LOG_PATH, "a", encoding="utf-8") as f:
-        f.write(linea + "\n")
+    c = str(c).upper()
+
+    # Quitar prefijos típicos OMIP
+    c = c.replace("FTB M ", "")
+    c = c.replace("FTB Q ", "")
+    c = c.replace("FTB CAL ", "")
+    c = c.replace("FTB YR ", "")
+
+    return c.title().strip()
+
+# ----------------------------
+# MAIN
+# ----------------------------
+def main():
+
+    # 1. Leer histórico Excel
+    if not os.path.exists(EXCEL_TEMPLATE):
+        raise Exception(f"No existe: {EXCEL_TEMPLATE}")
+
+    df_hist = pd.read_excel(EXCEL_TEMPLATE)
+
+    if "Date" not in df_hist.columns:
+        raise Exception("El Excel debe tener columna 'Date'")
+
+    df_hist["Date"] = pd.to_datetime(df_hist["Date"], dayfirst=True)
+
+    print(f"Histórico cargado: {len(df_hist)} filas")
+
+    # 2. Leer CSV OMIP
+    if not os.path.exists(CSV_PATH):
+        raise Exception(f"No existe: {CSV_PATH}")
+
+    df = pd.read_csv(CSV_PATH)
+
+    if "TRADE_DATE" not in df.columns:
+        raise Exception("CSV sin columna TRADE_DATE")
+
+    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
+
+    # Detectar columna de precio automáticamente
+    posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
+    if not posibles:
+        raise Exception("No se encontró columna de precio (SETTLEMENT/PRICE)")
+
+    PRECIO_COL = posibles[0]
+    print(f"Usando columna precio: {PRECIO_COL}")
+
+    df = df[["TRADE_DATE", "CONTRATO", PRECIO_COL]].copy()
+
+    # 3. Limpiar contratos
+    df["CONTRATO"] = df["CONTRATO"].apply(limpiar_contrato)
+
+    # 4. Pivot (fechas vs contratos)
+    pivot = df.pivot(index="TRADE_DATE", columns="CONTRATO", values=PRECIO_COL)
+
+    pivot = pivot.reset_index().rename(columns={"TRADE_DATE": "Date"})
+
+    print(f"Pivot generado: {pivot.shape}")
+
+    # 5. Merge con histórico
+    df_final = pd.concat([df_hist, pivot], ignore_index=True)
+
+    df_final = df_final.drop_duplicates(subset=["Date"], keep="last")
+    df_final = df_final.sort_values("Date")
+
+    print(f"Total fechas tras merge: {len(df_final)}")
+
+    # 6. Rellenar calendario completo (incluye fines de semana)
+    df_final = df_final.set_index("Date").asfreq("D")
+
+    # Forward fill (precios)
+    df_final = df_final.ffill()
+
+    df_final = df_final.reset_index()
+
+    print("Fines de semana rellenados")
+
+    # 7. Guardar Excel
+    os.makedirs("../data", exist_ok=True)
+
+    df_final.to_excel(OUTPUT_PATH, index=False)
+
+    print(f"Excel actualizado guardado en: {OUTPUT_PATH}")
+
 
 if __name__ == "__main__":
-    log("=" * 50)
-    log("INICIO - Actualizacion diaria mercado iberico")
-    log("=" * 50)
-
-    errores = []
-
-    for script in SCRIPTS:
-        log(f"Ejecutando: {script}")
-        try:
-            resultado = subprocess.run(
-                [sys.executable, script],
-                capture_output=True,
-                text=True,
-                timeout=1800
-            )
-
-            if resultado.returncode == 0:
-                log(f"OK: {script}")
-                if resultado.stdout:
-                    for linea in resultado.stdout.strip().split("\n"):
-                        log(f"   {linea}")
-            else:
-                log(f"ERROR en {script}")
-                if resultado.stderr:
-                    for linea in resultado.stderr.strip().split("\n"):
-                        log(f"   {linea}")
-                errores.append(script)
-
-        except subprocess.TimeoutExpired:
-            log(f"TIMEOUT en {script} (>30 min)")
-            errores.append(script)
-
-        except Exception as e:
-            log(f"EXCEPCION en {script}: {e}")
-            errores.append(script)
-
-    log("=" * 50)
-
-    if errores:
-        log(f"Completado con errores en: {', '.join(errores)}")
-        sys.exit(1)
-    else:
-        log("TODOS LOS SCRIPTS COMPLETADOS CORRECTAMENTE")
-        sys.exit(0)
+    main()
