@@ -182,3 +182,203 @@ TRADE_DATE,ZONE,SECTION,CONTRACT_NAME,EXCEL_HEADER,PRICE_D,PRICE_D_1,PRICE_PRICE
 2019-01-10,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,55.21,55.28,,55.21,D
 2019-01-10,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,63.96,63.26,,63.96,D
 2019-01-10,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,55.46,55.53,,55.46,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.55,52.83,,53.55,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,55.53,55.21,,55.53,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,50.73,50.83,,50.73,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,48.51,48.61,,48.51,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,47.63,47.73,,47.63,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,46.88,46.98,,46.88,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,46.51,46.61,,46.51,D
+2019-01-11,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,46.51,46.61,,46.51,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,62.05,62.25,,62.05,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,60.22,59.92,,60.22,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,60.87,60.62,,60.87,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,55.56,55.33,,55.56,D
+2019-01-11,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,55.93,55.63,,55.93,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,60.03,59.68,,60.03,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,56.65,56.25,,56.65,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,50.78,50.49,,50.78,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,60.91,60.61,,60.91,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,55.53,55.21,,55.53,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,64.11,63.96,,64.11,D
+2019-01-11,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,55.78,55.46,,55.78,D
+2019-01-12,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,,53.55,,53.55,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,,55.53,,55.53,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,,50.73,,50.73,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,,48.51,,48.51,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,,47.63,,47.63,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,,46.88,,46.88,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,,46.51,,46.51,D-1
+2019-01-12,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,,46.51,,46.51,D-1
+2019-01-12,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,,62.05,,62.05,D-1
+2019-01-12,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,,60.22,,60.22,D-1
+2019-01-12,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,,60.87,,60.87,D-1
+2019-01-12,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,,55.56,,55.56,D-1
+2019-01-12,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,,55.93,,55.93,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,,60.03,,60.03,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,,56.65,,56.65,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,,50.78,,50.78,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,,60.91,,60.91,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,,55.53,,55.53,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,,64.11,,64.11,D-1
+2019-01-12,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,,55.78,,55.78,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,,53.55,,53.55,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,,55.53,,55.53,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,,50.73,,50.73,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,,48.51,,48.51,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,,47.63,,47.63,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,,46.88,,46.88,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,,46.51,,46.51,D-1
+2019-01-13,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,,46.51,,46.51,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,,62.05,,62.05,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,,60.22,,60.22,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,,60.87,,60.87,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,,55.56,,55.56,D-1
+2019-01-13,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,,55.93,,55.93,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,,60.03,,60.03,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,,56.65,,56.65,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,,50.78,,50.78,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,,60.91,,60.91,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,,55.53,,55.53,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,,64.11,,64.11,D-1
+2019-01-13,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,,55.78,,55.78,D-1
+2019-01-14,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.41,53.55,,53.41,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,55.46,55.53,,55.46,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,50.91,50.73,,50.91,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,48.69,48.51,,48.69,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,47.81,47.63,,47.81,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,47.06,46.88,,47.06,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,46.69,46.51,,46.69,D
+2019-01-14,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,46.69,46.51,,46.69,D
+2019-01-14,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,60.6,62.05,,60.6,D
+2019-01-14,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,60.37,60.22,,60.37,D
+2019-01-14,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,60.71,60.87,,60.71,D
+2019-01-14,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,55.41,55.56,,55.41,D
+2019-01-14,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,55.13,55.93,,55.13,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,59.95,60.03,,59.95,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,56.5,56.65,,56.5,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,50.72,50.78,,50.72,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,61.06,60.91,,61.06,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,55.46,55.53,,55.46,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,63.71,64.11,,63.71,D
+2019-01-14,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,55.71,55.78,,55.71,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.55,53.41,,53.55,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,55.53,55.46,,55.53,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,50.63,50.91,,50.63,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,48.41,48.69,,48.41,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,47.53,47.81,,47.53,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,46.78,47.06,,46.78,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,46.41,46.69,,46.41,D
+2019-01-15,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,46.41,46.69,,46.41,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,60.7,60.6,,60.7,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,60.52,60.37,,60.52,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,60.87,60.71,,60.87,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,55.56,55.41,,55.56,D
+2019-01-15,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,54.41,55.13,,54.41,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,60.03,59.95,,60.03,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,56.65,56.5,,56.65,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,50.78,50.72,,50.78,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,61.21,61.06,,61.21,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,55.53,55.46,,55.53,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,63.96,63.71,,63.96,D
+2019-01-15,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,55.78,55.71,,55.78,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.32,53.55,,53.32,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,55.78,55.53,,55.78,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,51.36,50.63,,51.36,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,49.14,48.41,,49.14,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,48.26,47.53,,48.26,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,47.51,46.78,,47.51,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,47.14,46.41,,47.14,D
+2019-01-16,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,47.14,46.41,,47.14,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,61.15,60.7,,61.15,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,61.04,60.52,,61.04,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,60.6,60.87,,60.6,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,55.32,55.56,,55.32,D
+2019-01-16,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,54.93,54.41,,54.93,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,60.3,60.03,,60.3,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,56.4,56.65,,56.4,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,51.01,50.78,,51.01,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,61.74,61.21,,61.74,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,55.78,55.53,,55.78,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,64.23,63.96,,64.23,D
+2019-01-16,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,56.03,55.78,,56.03,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.89,53.32,,53.89,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,56.46,55.78,,56.46,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,51.78,51.36,,51.78,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,49.56,49.14,,49.56,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,48.68,48.26,,48.68,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,47.93,47.51,,47.93,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,47.56,47.14,,47.56,D
+2019-01-17,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,47.56,47.14,,47.56,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,62.35,61.15,,62.35,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,62.1,61.04,,62.1,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,61.24,60.6,,61.24,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,55.91,55.32,,55.91,D
+2019-01-17,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,55.23,54.93,,55.23,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,61.03,60.3,,61.03,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,57.0,56.4,,57.0,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,51.63,51.01,,51.63,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,62.81,61.74,,62.81,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,56.46,55.78,,56.46,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,65.41,64.23,,65.41,D
+2019-01-17,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,56.71,56.03,,56.71,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,53.45,53.89,,53.45,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,56.78,56.46,,56.78,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,51.78,51.78,,51.78,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,49.53,49.56,,49.53,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,48.65,48.68,,48.65,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,47.9,47.93,,47.9,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,47.53,47.56,,47.53,D
+2019-01-18,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,47.53,47.56,,47.53,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,61.65,62.35,,61.65,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,62.2,62.1,,62.2,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,62.01,61.24,,62.01,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,56.61,55.91,,56.61,D
+2019-01-18,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,55.63,55.23,,55.63,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,61.38,61.03,,61.38,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,57.35,57.0,,57.35,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,51.92,51.63,,51.92,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,62.91,62.81,,62.91,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,56.78,56.46,,56.78,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,65.56,65.41,,65.56,D
+2019-01-18,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,57.03,56.71,,57.03,D
+2019-01-19,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,,53.45,,53.45,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,,56.78,,56.78,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,,51.78,,51.78,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,,49.53,,49.53,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,,48.65,,48.65,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,,47.9,,47.9,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,,47.53,,47.53,D-1
+2019-01-19,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,,47.53,,47.53,D-1
+2019-01-19,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,,61.65,,61.65,D-1
+2019-01-19,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,,62.2,,62.2,D-1
+2019-01-19,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,,62.01,,62.01,D-1
+2019-01-19,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,,56.61,,56.61,D-1
+2019-01-19,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,,55.63,,55.63,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,,61.38,,61.38,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,,57.35,,57.35,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,,51.92,,51.92,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,,62.91,,62.91,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,,56.78,,56.78,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,,65.56,,65.56,D-1
+2019-01-19,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,,57.03,,57.03,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0053523 Nominal Fixo MWH: 720 Trading last day: 2019-03-29 Trading quotation: €/MWh FPB M Apr-19,Apr 19,,53.45,,53.45,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0013642 Nominal Fixo MWH: 8784 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB YR-20,Cal 20,,56.78,,56.78,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0013659 Nominal Fixo MWH: 8760 Trading last day: 2020-12-29 Trading quotation: €/MWh FPB YR-21,Cal 21,,51.78,,51.78,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0053598 Nominal Fixo MWH: 8760 Trading last day: 2021-12-29 Trading quotation: €/MWh FPB YR-22,Cal 22,,49.53,,49.53,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0087703 Nominal Fixo MWH: 8760 Trading last day: 2022-12-29 Trading quotation: €/MWh FPB YR-23,Cal 23,,48.65,,48.65,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0100746 Nominal Fixo MWH: 8784 Trading last day: 2023-12-28 Trading quotation: €/MWh FPB YR-24,Cal 24,,47.9,,47.9,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0133317 Nominal Fixo MWH: 8760 Trading last day: 2024-12-27 Trading quotation: €/MWh FPB YR-25,Cal 25,,47.53,,47.53,D-1
+2019-01-20,PT,Year,ISIN Code: PTFTO0133325 Nominal Fixo MWH: 8760 Trading last day: 2025-12-29 Trading quotation: €/MWh FPB YR-26,Cal 26,,47.53,,47.53,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0053507 Nominal Fixo MWH: 672 Trading last day: 2019-01-31 Trading quotation: €/MWh FPB M Feb-19,Feb 19,,61.65,,61.65,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0100589 Nominal Fixo MWH: 744 Trading last day: 2019-06-28 Trading quotation: €/MWh FPB M Jul-19,Jul 19,,62.2,,62.2,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0053549 Nominal Fixo MWH: 720 Trading last day: 2019-05-31 Trading quotation: €/MWh FPB M Jun-19,Jun 19,,62.01,,62.01,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0053531 Nominal Fixo MWH: 744 Trading last day: 2019-04-30 Trading quotation: €/MWh FPB M May-19,Mai 19,,56.61,,56.61,D-1
+2019-01-20,PT,Month,ISIN Code: PTFTO0053515 Nominal Fixo MWH: 743 Trading last day: 2019-02-28 Trading quotation: €/MWh FPB M Mar-19,Mrz 19,,55.63,,55.63,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0053564 Nominal Fixo MWH: 2183 Trading last day: 2019-12-27 Trading quotation: €/MWh FPB Q1-20,Q1 20,,61.38,,61.38,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0013600 Nominal Fixo MWH: 2184 Trading last day: 2019-03-28 Trading quotation: €/MWh FPB Q2-19,Q2 19,,57.35,,57.35,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0053572 Nominal Fixo MWH: 2184 Trading last day: 2020-03-27 Trading quotation: €/MWh FPB Q2-20,Q2 20,,51.92,,51.92,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0013618 Nominal Fixo MWH: 2208 Trading last day: 2019-06-27 Trading quotation: €/MWh FPB Q3-19,Q3 19,,62.91,,62.91,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0053580 Nominal Fixo MWH: 2208 Trading last day: 2020-06-26 Trading quotation: €/MWh FPB Q3-20,Q3 20,,56.78,,56.78,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0053556 Nominal Fixo MWH: 2209 Trading last day: 2019-09-27 Trading quotation: €/MWh FPB Q4-19,Q4 19,,65.56,,65.56,D-1
+2019-01-20,PT,Quarter,ISIN Code: PTFTO0100704 Nominal Fixo MWH: 2209 Trading last day: 2020-09-28 Trading quotation: €/MWh FPB Q4-20,Q4 20,,57.03,,57.03,D-1
