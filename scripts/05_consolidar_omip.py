@@ -5,7 +5,7 @@ import os
 # PATHS
 # ----------------------------
 CSV_PATH = "data/omip_futuros.csv"
-EXCEL_TEMPLATE = "OMIP_Template.xlsx"
+EXCEL_TEMPLATE = "inputs/OMIP_Template.xlsx"
 OUTPUT_PATH = "data/OMIP_actualizado.xlsx"
 
 # ----------------------------
