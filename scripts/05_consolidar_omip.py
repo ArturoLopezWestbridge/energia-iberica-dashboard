@@ -1,131 +1,168 @@
-import pandas as pd
 import os
+import re
+import shutil
+import datetime as dt
 
-# ----------------------------
-# PATHS ROBUSTOS
-# ----------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+import pandas as pd
+from openpyxl import load_workbook
 
-CSV_PATH = os.path.join(BASE_DIR, "data", "omip_futuros.csv")
-EXCEL_TEMPLATE = os.path.join(BASE_DIR, "inputs", "OMIP_Template.xlsx")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if "__file__" in globals() else os.getcwd()
+TEMPLATE_PATH = os.path.join(BASE_DIR, "inputs", "OMIP_Template.xlsx")
 OUTPUT_PATH = os.path.join(BASE_DIR, "data", "OMIP_actualizado.xlsx")
+CSV_ES_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es.csv")
+CSV_PT_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_pt.csv")
 
-# ----------------------------
-# LIMPIAR NOMBRE DE CONTRATO
-# ----------------------------
-def limpiar_contrato(c):
-    if pd.isna(c):
+GERMAN_MONTHS = {
+    "Jan": 1,
+    "Feb": 2,
+    "Mrz": 3,
+    "Apr": 4,
+    "Mai": 5,
+    "Jun": 6,
+    "Jul": 7,
+    "Aug": 8,
+    "Sep": 9,
+    "Okt": 10,
+    "Nov": 11,
+    "Dez": 12,
+}
+
+
+def parse_sheet_date(value) -> pd.Timestamp | None:
+    if value is None:
+        return None
+    if isinstance(value, (dt.datetime, dt.date, pd.Timestamp)):
+        return pd.Timestamp(value).normalize()
+
+    s = str(value).strip()
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d", "%d/%m/%Y"):
+        try:
+            return pd.Timestamp(dt.datetime.strptime(s, fmt).date())
+        except ValueError:
+            continue
+    return None
+
+
+def header_to_expiry(header: str) -> pd.Timestamp | None:
+    if not header:
         return None
 
-    c = str(c).upper()
+    s = str(header).strip()
 
-    c = c.replace("FTB M ", "")
-    c = c.replace("FTB Q ", "")
-    c = c.replace("FTB CAL ", "")
-    c = c.replace("FTB YR ", "")
+    m = re.fullmatch(r"(Jan|Feb|Mrz|Apr|Mai|Jun|Jul|Aug|Sep|Okt|Nov|Dez) (\d{2})", s)
+    if m:
+        month = GERMAN_MONTHS[m.group(1)]
+        year = 2000 + int(m.group(2))
+        return pd.Timestamp(year=year, month=month, day=1) + pd.offsets.MonthEnd(0)
 
-    return c.title().strip()
+    q = re.fullmatch(r"Q([1-4]) (\d{2})", s)
+    if q:
+        quarter = int(q.group(1))
+        year = 2000 + int(q.group(2))
+        month = quarter * 3
+        return pd.Timestamp(year=year, month=month, day=1) + pd.offsets.MonthEnd(0)
 
-# ----------------------------
-# MAIN
-# ----------------------------
+    y = re.fullmatch(r"Cal (\d{2})", s)
+    if y:
+        year = 2000 + int(y.group(1))
+        return pd.Timestamp(year=year, month=12, day=31)
+
+    return None
+
+
+def load_csv(path: str) -> pd.DataFrame | None:
+    if not os.path.exists(path):
+        return None
+
+    df = pd.read_csv(path)
+    if df.empty:
+        return None
+
+    if "TRADE_DATE" not in df.columns or "EXCEL_HEADER" not in df.columns or "PRICE_USED" not in df.columns:
+        return None
+
+    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"]).dt.normalize()
+    df = df[df["EXCEL_HEADER"].notna() & df["PRICE_USED"].notna()].copy()
+    return df
+
+
+def build_maps(ws):
+    header_to_col = {}
+    for col in range(1, ws.max_column + 1):
+        header = ws.cell(row=1, column=col).value
+        if header is not None:
+            header_to_col[str(header).strip()] = col
+
+    date_to_row = {}
+    for row in range(2, ws.max_row + 1):
+        date_value = parse_sheet_date(ws.cell(row=row, column=1).value)
+        if date_value is not None:
+            date_to_row[date_value] = row
+
+    return header_to_col, date_to_row
+
+
+def actualizar_hoja(ws, df: pd.DataFrame, limpiar_vencidos: bool = True):
+    header_to_col, date_to_row = build_maps(ws)
+
+    escritos = 0
+    for row in df.itertuples(index=False):
+        header = str(row.EXCEL_HEADER).strip()
+        trade_date = pd.Timestamp(row.TRADE_DATE).normalize()
+
+        if header not in header_to_col or trade_date not in date_to_row:
+            continue
+
+        col = header_to_col[header]
+        row_idx = date_to_row[trade_date]
+        ws.cell(row=row_idx, column=col, value=float(row.PRICE_USED))
+        escritos += 1
+
+    limpiados = 0
+    if limpiar_vencidos:
+        sorted_dates = sorted(date_to_row.items(), key=lambda x: x[0])
+        for header, col in header_to_col.items():
+            if col == 1:
+                continue
+            expiry = header_to_expiry(header)
+            if expiry is None:
+                continue
+            for current_date, row_idx in sorted_dates:
+                if current_date > expiry:
+                    cell = ws.cell(row=row_idx, column=col)
+                    if cell.value is not None:
+                        cell.value = None
+                        limpiados += 1
+
+    return escritos, limpiados
+
+
 def main():
+    if not os.path.exists(TEMPLATE_PATH):
+        raise FileNotFoundError(f"No existe: {TEMPLATE_PATH}")
 
-    print("BASE_DIR:", BASE_DIR)
-    print("CSV_PATH:", CSV_PATH)
-    print("EXCEL_TEMPLATE:", EXCEL_TEMPLATE)
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+    shutil.copyfile(TEMPLATE_PATH, OUTPUT_PATH)
 
-    # 1. Leer histórico Excel
-    if not os.path.exists(EXCEL_TEMPLATE):
-        raise Exception(f"No existe: {EXCEL_TEMPLATE}")
+    wb = load_workbook(OUTPUT_PATH)
 
-    df_hist = pd.read_excel(EXCEL_TEMPLATE)
+    df_es = load_csv(CSV_ES_PATH)
+    df_pt = load_csv(CSV_PT_PATH)
 
-    if "Date" not in df_hist.columns:
-        raise Exception("El Excel debe tener columna 'Date'")
+    if df_es is not None and "Spain OMIP" in wb.sheetnames:
+        escritos, limpiados = actualizar_hoja(wb["Spain OMIP"], df_es, limpiar_vencidos=True)
+        print(f"Spain OMIP: escritos={escritos}, limpiados={limpiados}")
+    else:
+        print("Spain OMIP: sin CSV nuevo. Se conserva la plantilla.")
 
-    df_hist["Date"] = pd.to_datetime(df_hist["Date"], dayfirst=True)
+    if df_pt is not None and "Portugal OMIP" in wb.sheetnames:
+        escritos, limpiados = actualizar_hoja(wb["Portugal OMIP"], df_pt, limpiar_vencidos=True)
+        print(f"Portugal OMIP: escritos={escritos}, limpiados={limpiados}")
+    else:
+        print("Portugal OMIP: sin CSV nuevo. Se conserva la plantilla.")
 
-    print(f"Histórico cargado: {len(df_hist)} filas")
-
-    # ----------------------------
-    # 2. Si NO hay CSV → usar solo histórico
-    # ----------------------------
-    if not os.path.exists(CSV_PATH):
-        print("No existe CSV OMIP. Usando solo histórico.")
-
-        df_final = df_hist.copy()
-
-        df_final = df_final.set_index("Date").asfreq("D")
-        df_final = df_final.ffill()
-        df_final = df_final.reset_index()
-
-        df_final.to_excel(OUTPUT_PATH, index=False)
-
-        print(f"Excel generado solo con histórico: {OUTPUT_PATH}")
-        return
-
-    # ----------------------------
-    # 3. Leer CSV OMIP
-    # ----------------------------
-    df = pd.read_csv(CSV_PATH)
-
-    if "TRADE_DATE" not in df.columns:
-        raise Exception("CSV sin columna TRADE_DATE")
-
-    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
-
-    # Detectar columna de precio
-    posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
-    if not posibles:
-        raise Exception("No se encontró columna de precio (SETTLEMENT/PRICE)")
-
-    PRECIO_COL = posibles[0]
-    print(f"Usando columna precio: {PRECIO_COL}")
-
-    df = df[["TRADE_DATE", "CONTRATO", PRECIO_COL]].copy()
-
-    # ----------------------------
-    # 4. Limpiar contratos
-    # ----------------------------
-    df["CONTRATO"] = df["CONTRATO"].apply(limpiar_contrato)
-
-    # ----------------------------
-    # 5. Pivot
-    # ----------------------------
-    pivot = df.pivot(index="TRADE_DATE", columns="CONTRATO", values=PRECIO_COL)
-
-    pivot = pivot.reset_index().rename(columns={"TRADE_DATE": "Date"})
-
-    print(f"Pivot generado: {pivot.shape}")
-
-    # ----------------------------
-    # 6. Merge con histórico
-    # ----------------------------
-    df_final = pd.concat([df_hist, pivot], ignore_index=True)
-
-    df_final = df_final.drop_duplicates(subset=["Date"], keep="last")
-    df_final = df_final.sort_values("Date")
-
-    print(f"Total fechas tras merge: {len(df_final)}")
-
-    # ----------------------------
-    # 7. Rellenar calendario
-    # ----------------------------
-    df_final = df_final.set_index("Date").asfreq("D")
-    df_final = df_final.ffill()
-    df_final = df_final.reset_index()
-
-    print("Fines de semana rellenados")
-
-    # ----------------------------
-    # 8. Guardar
-    # ----------------------------
-    os.makedirs(os.path.join(BASE_DIR, "data"), exist_ok=True)
-
-    df_final.to_excel(OUTPUT_PATH, index=False)
-
-    print(f"Excel actualizado guardado en: {OUTPUT_PATH}")
+    wb.save(OUTPUT_PATH)
+    print(f"Archivo generado: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
