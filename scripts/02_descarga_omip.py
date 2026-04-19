@@ -8,16 +8,28 @@ import requests
 from bs4 import BeautifulSoup
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if "__file__" in globals() else os.getcwd()
-OUTPUT_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es.csv")
-PROGRESS_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es_progreso.txt")
 
 START_DATE = dt.date(2019, 1, 1)
 MAX_DIAS_POR_EJECUCION = 10
 
 BASE_URL = "https://www.omip.pt/en/dados-mercado"
-PRODUCT = "EL"
-ZONE = "ES"
-INSTRUMENT = "FTB"
+
+MARKETS = {
+    "ES": {
+        "zone": "ES",
+        "instrument": "FTB",
+        "heading_prefix": "SPEL Base Futures",
+        "output_path": os.path.join(BASE_DIR, "data", "omip_futuros_es.csv"),
+        "progress_path": os.path.join(BASE_DIR, "data", "omip_futuros_es_progreso.txt"),
+    },
+    "PT": {
+        "zone": "PT",
+        "instrument": "FPB",
+        "heading_prefix": "PTEL Base Futures",
+        "output_path": os.path.join(BASE_DIR, "data", "omip_futuros_pt.csv"),
+        "progress_path": os.path.join(BASE_DIR, "data", "omip_futuros_pt_progreso.txt"),
+    },
+}
 
 HEADERS = {
     "User-Agent": (
@@ -122,7 +134,7 @@ def find_heading(soup, text):
     return None
 
 
-def parse_omip_table(table):
+def parse_omip_table(table, contract_prefix):
     rows = table.find_all("tr")
     header_idx = None
     headers = None
@@ -166,7 +178,7 @@ def parse_omip_table(table):
             continue
 
         contract = vals_kept[0]
-        if "FTB" not in contract.upper():
+        if contract_prefix not in contract.upper():
             continue
 
         rec = dict(zip(headers_kept, vals_kept))
@@ -175,12 +187,14 @@ def parse_omip_table(table):
     return out
 
 
-def fetch_omip_ref_prices(target_date, session):
+def fetch_omip_ref_prices(target_date, session, market_key):
+    cfg = MARKETS[market_key]
+
     params = {
         "date": target_date.strftime("%Y-%m-%d"),
-        "product": PRODUCT,
-        "zone": ZONE,
-        "instrument": INSTRUMENT,
+        "product": "EL",
+        "zone": cfg["zone"],
+        "instrument": cfg["instrument"],
     }
 
     r = session.get(BASE_URL, params=params, headers=HEADERS, timeout=30)
@@ -189,8 +203,11 @@ def fetch_omip_ref_prices(target_date, session):
     soup = BeautifulSoup(r.text, "html.parser")
     records = []
 
+    contract_prefix = cfg["instrument"]
+    heading_prefix = cfg["heading_prefix"]
+
     for section in ("Month", "Quarter", "Year"):
-        heading = find_heading(soup, f"SPEL Base Futures - {section}")
+        heading = find_heading(soup, f"{heading_prefix} - {section}")
         if not heading:
             continue
 
@@ -198,7 +215,7 @@ def fetch_omip_ref_prices(target_date, session):
         if not table:
             continue
 
-        rows = parse_omip_table(table)
+        rows = parse_omip_table(table, contract_prefix)
 
         for rec in rows:
             contract_full = rec.get("Contract name")
@@ -221,16 +238,21 @@ def fetch_omip_ref_prices(target_date, session):
                     val_price = to_number(v)
 
             ref = val_d
+            source = "D"
+
             if ref is None:
                 ref = val_price
+                source = "PRICE"
+
             if ref is None:
                 ref = val_d1
+                source = "D-1"
 
             if ref is not None:
                 records.append(
                     {
                         "TRADE_DATE": pd.Timestamp(target_date),
-                        "ZONE": ZONE,
+                        "ZONE": cfg["zone"],
                         "SECTION": section,
                         "CONTRACT_NAME": clean_text(contract_full),
                         "EXCEL_HEADER": product_label,
@@ -238,11 +260,7 @@ def fetch_omip_ref_prices(target_date, session):
                         "PRICE_D_1": val_d1,
                         "PRICE_PRICE": val_price,
                         "PRICE_USED": ref,
-                        "PRICE_SOURCE": (
-                            "D" if ref == val_d
-                            else "PRICE" if ref == val_price
-                            else "D-1"
-                        ),
+                        "PRICE_SOURCE": source,
                     }
                 )
 
@@ -255,18 +273,18 @@ def fetch_omip_ref_prices(target_date, session):
     return df
 
 
-def leer_csv_existente():
-    if not os.path.exists(OUTPUT_PATH):
+def leer_csv_existente(path):
+    if not os.path.exists(path):
         return None
-    df = pd.read_csv(OUTPUT_PATH)
+    df = pd.read_csv(path)
     if "TRADE_DATE" in df.columns and not df.empty:
         df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
     return df
 
 
-def obtener_fecha_inicio(df_existente):
-    if os.path.exists(PROGRESS_PATH):
-        with open(PROGRESS_PATH, "r", encoding="utf-8") as f:
+def obtener_fecha_inicio(df_existente, progress_path):
+    if os.path.exists(progress_path):
+        with open(progress_path, "r", encoding="utf-8") as f:
             return dt.datetime.strptime(f.read().strip(), "%Y-%m-%d").date()
 
     if df_existente is not None and not df_existente.empty and "TRADE_DATE" in df_existente.columns:
@@ -276,11 +294,11 @@ def obtener_fecha_inicio(df_existente):
     return START_DATE
 
 
-def guardar(df_nuevo, df_existente):
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+def guardar(df_nuevo, df_existente, output_path):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     if df_nuevo is None or df_nuevo.empty:
-        print("Sin datos nuevos para guardar.")
+        print(f"Sin datos nuevos para guardar en {os.path.basename(output_path)}.")
         return
 
     if df_existente is not None and not df_existente.empty:
@@ -291,66 +309,78 @@ def guardar(df_nuevo, df_existente):
     df_final["TRADE_DATE"] = pd.to_datetime(df_final["TRADE_DATE"])
     df_final = df_final.drop_duplicates(subset=["TRADE_DATE", "EXCEL_HEADER"], keep="last")
     df_final = df_final.sort_values(["TRADE_DATE", "EXCEL_HEADER"]).reset_index(drop=True)
-    df_final.to_csv(OUTPUT_PATH, index=False)
+    df_final.to_csv(output_path, index=False)
 
-    print(f"Guardado: {OUTPUT_PATH} | Filas: {len(df_final):,}")
+    print(f"Guardado: {output_path} | Filas: {len(df_final):,}")
 
 
-def guardar_progreso(fecha):
-    os.makedirs(os.path.dirname(PROGRESS_PATH), exist_ok=True)
-    with open(PROGRESS_PATH, "w", encoding="utf-8") as f:
+def guardar_progreso(fecha, progress_path):
+    os.makedirs(os.path.dirname(progress_path), exist_ok=True)
+    with open(progress_path, "w", encoding="utf-8") as f:
         f.write(fecha.strftime("%Y-%m-%d"))
     print(f"Progreso guardado: {fecha}")
 
 
-def main():
-    print("=" * 60)
-    print("OMIP ES - Descarga histórica pública")
-    print("=" * 60)
+def procesar_mercado(market_key, session):
+    cfg = MARKETS[market_key]
 
-    df_existente = leer_csv_existente()
-    fecha_inicio = obtener_fecha_inicio(df_existente)
+    print("-" * 60)
+    print(f"OMIP {market_key} - Descarga histórica pública")
+    print("-" * 60)
+
+    df_existente = leer_csv_existente(cfg["output_path"])
+    fecha_inicio = obtener_fecha_inicio(df_existente, cfg["progress_path"])
     hoy = dt.date.today()
     fecha_fin = min(fecha_inicio + dt.timedelta(days=MAX_DIAS_POR_EJECUCION - 1), hoy)
 
-    print(f"Descargando: {fecha_inicio} -> {fecha_fin}")
+    print(f"Descargando {market_key}: {fecha_inicio} -> {fecha_fin}")
 
-    session = requests.Session()
     frames = []
     dias_ok = 0
     fecha_actual = fecha_inicio
 
     while fecha_actual <= fecha_fin:
         try:
-            df_dia = fetch_omip_ref_prices(fecha_actual, session)
+            df_dia = fetch_omip_ref_prices(fecha_actual, session, market_key)
             if not df_dia.empty:
                 frames.append(df_dia)
                 dias_ok += 1
-                print(f"  Día con datos: {fecha_actual} | filas={len(df_dia)}")
+                print(f"  Día con datos {market_key}: {fecha_actual} | filas={len(df_dia)}")
             else:
-                print(f"  Sin datos: {fecha_actual}")
+                print(f"  Sin datos {market_key}: {fecha_actual}")
         except Exception as exc:
-            print(f"  Error {fecha_actual}: {exc}")
+            print(f"  Error {market_key} {fecha_actual}: {exc}")
 
         time.sleep(0.35)
         fecha_actual += dt.timedelta(days=1)
 
-    print(f"Días con datos: {dias_ok}")
+    print(f"Días con datos {market_key}: {dias_ok}")
 
     if frames:
         df_nuevo = pd.concat(frames, ignore_index=True)
-        guardar(df_nuevo, df_existente)
+        guardar(df_nuevo, df_existente, cfg["output_path"])
     else:
-        print("Sin datos nuevos.")
+        print(f"Sin datos nuevos {market_key}.")
 
     siguiente = fecha_fin + dt.timedelta(days=1)
     if siguiente <= hoy:
-        guardar_progreso(siguiente)
-        print(f"Quedan datos desde {siguiente}. Vuelve a ejecutar el workflow.")
+        guardar_progreso(siguiente, cfg["progress_path"])
+        print(f"Quedan datos {market_key} desde {siguiente}. Vuelve a ejecutar el workflow.")
     else:
-        if os.path.exists(PROGRESS_PATH):
-            os.remove(PROGRESS_PATH)
-        print("Descarga completada.")
+        if os.path.exists(cfg["progress_path"]):
+            os.remove(cfg["progress_path"])
+        print(f"Descarga completada {market_key}.")
+
+
+def main():
+    print("=" * 60)
+    print("OMIP ES/PT - Descarga histórica pública")
+    print("=" * 60)
+
+    session = requests.Session()
+
+    for market_key in ("ES", "PT"):
+        procesar_mercado(market_key, session)
 
 
 if __name__ == "__main__":
