@@ -12,6 +12,27 @@ OUTPUT_PATH = os.path.join(BASE_DIR, "data", "OMIP_actualizado.xlsx")
 CSV_ES_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es.csv")
 CSV_PT_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_pt.csv")
 
+MONTH_ALIASES = {
+    "jan": "Jan",
+    "feb": "Feb",
+    "mar": "Mrz",
+    "mrz": "Mrz",
+    "apr": "Apr",
+    "may": "Mai",
+    "mai": "Mai",
+    "jun": "Jun",
+    "jul": "Jul",
+    "aug": "Aug",
+    "ago": "Aug",
+    "sep": "Sep",
+    "oct": "Okt",
+    "okt": "Okt",
+    "nov": "Nov",
+    "dec": "Dez",
+    "dez": "Dez",
+    "dic": "Dez",
+}
+
 GERMAN_MONTHS = {
     "Jan": 1,
     "Feb": 2,
@@ -28,13 +49,48 @@ GERMAN_MONTHS = {
 }
 
 
+def clean_text(value):
+    if value is None:
+        return ""
+    s = str(value).replace("\xa0", " ").strip()
+    s = re.sub(r"\s+", " ", s)
+    return s
+
+
+def normalize_header(value: str) -> str:
+    s = clean_text(value)
+    if not s:
+        return ""
+
+    s = s.replace("-", " ")
+    s = re.sub(r"\s+", " ", s).strip()
+
+    m = re.fullmatch(r"q([1-4])\s*(\d{2})", s, flags=re.IGNORECASE)
+    if m:
+        return f"Q{m.group(1)} {m.group(2)}"
+
+    m = re.fullmatch(r"(?:cal|yr|y)\s*(\d{2})", s, flags=re.IGNORECASE)
+    if m:
+        return f"Cal {m.group(1)}"
+
+    m = re.fullmatch(r"([A-Za-z]+)\s*(\d{2})", s)
+    if m:
+        month_raw = m.group(1).lower()
+        yy = m.group(2)
+        month = MONTH_ALIASES.get(month_raw)
+        if month:
+            return f"{month} {yy}"
+
+    return s
+
+
 def parse_sheet_date(value) -> pd.Timestamp | None:
     if value is None:
         return None
     if isinstance(value, (dt.datetime, dt.date, pd.Timestamp)):
         return pd.Timestamp(value).normalize()
 
-    s = str(value).strip()
+    s = clean_text(value)
     for fmt in ("%d.%m.%Y", "%Y-%m-%d", "%d/%m/%Y"):
         try:
             return pd.Timestamp(dt.datetime.strptime(s, fmt).date())
@@ -47,7 +103,7 @@ def header_to_expiry(header: str) -> pd.Timestamp | None:
     if not header:
         return None
 
-    s = str(header).strip()
+    s = normalize_header(header)
 
     m = re.fullmatch(r"(Jan|Feb|Mrz|Apr|Mai|Jun|Jul|Aug|Sep|Okt|Nov|Dez) (\d{2})", s)
     if m:
@@ -78,20 +134,28 @@ def load_csv(path: str) -> pd.DataFrame | None:
     if df.empty:
         return None
 
-    if "TRADE_DATE" not in df.columns or "EXCEL_HEADER" not in df.columns or "PRICE_USED" not in df.columns:
+    required = {"TRADE_DATE", "EXCEL_HEADER", "PRICE_USED"}
+    if not required.issubset(df.columns):
         return None
 
     df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"]).dt.normalize()
-    df = df[df["EXCEL_HEADER"].notna() & df["PRICE_USED"].notna()].copy()
+    df["EXCEL_HEADER_NORM"] = df["EXCEL_HEADER"].apply(normalize_header)
+    df = df[df["EXCEL_HEADER_NORM"].notna() & (df["EXCEL_HEADER_NORM"] != "") & df["PRICE_USED"].notna()].copy()
     return df
 
 
 def build_maps(ws):
     header_to_col = {}
+    header_raw = {}
+
     for col in range(1, ws.max_column + 1):
         header = ws.cell(row=1, column=col).value
         if header is not None:
-            header_to_col[str(header).strip()] = col
+            raw = clean_text(header)
+            norm = normalize_header(raw)
+            if norm:
+                header_to_col[norm] = col
+                header_raw[norm] = raw
 
     date_to_row = {}
     for row in range(2, ws.max_row + 1):
@@ -99,18 +163,26 @@ def build_maps(ws):
         if date_value is not None:
             date_to_row[date_value] = row
 
-    return header_to_col, date_to_row
+    return header_to_col, header_raw, date_to_row
 
 
-def actualizar_hoja(ws, df: pd.DataFrame, limpiar_vencidos: bool = True):
-    header_to_col, date_to_row = build_maps(ws)
+def actualizar_hoja(ws, df: pd.DataFrame, limpiar_vencidos: bool = True, debug_name: str = ""):
+    header_to_col, header_raw, date_to_row = build_maps(ws)
 
     escritos = 0
+    missing_headers = set()
+    missing_dates = 0
+
     for row in df.itertuples(index=False):
-        header = str(row.EXCEL_HEADER).strip()
+        header = row.EXCEL_HEADER_NORM
         trade_date = pd.Timestamp(row.TRADE_DATE).normalize()
 
-        if header not in header_to_col or trade_date not in date_to_row:
+        if header not in header_to_col:
+            missing_headers.add(header)
+            continue
+
+        if trade_date not in date_to_row:
+            missing_dates += 1
             continue
 
         col = header_to_col[header]
@@ -121,10 +193,10 @@ def actualizar_hoja(ws, df: pd.DataFrame, limpiar_vencidos: bool = True):
     limpiados = 0
     if limpiar_vencidos:
         sorted_dates = sorted(date_to_row.items(), key=lambda x: x[0])
-        for header, col in header_to_col.items():
+        for header_norm, col in header_to_col.items():
             if col == 1:
                 continue
-            expiry = header_to_expiry(header)
+            expiry = header_to_expiry(header_norm)
             if expiry is None:
                 continue
             for current_date, row_idx in sorted_dates:
@@ -133,6 +205,11 @@ def actualizar_hoja(ws, df: pd.DataFrame, limpiar_vencidos: bool = True):
                     if cell.value is not None:
                         cell.value = None
                         limpiados += 1
+
+    if missing_headers:
+        print(f"{debug_name}: headers no encontrados ({len(missing_headers)}): {sorted(list(missing_headers))[:20]}")
+    if missing_dates:
+        print(f"{debug_name}: fechas no encontradas: {missing_dates}")
 
     return escritos, limpiados
 
@@ -150,13 +227,13 @@ def main():
     df_pt = load_csv(CSV_PT_PATH)
 
     if df_es is not None and "Spain OMIP" in wb.sheetnames:
-        escritos, limpiados = actualizar_hoja(wb["Spain OMIP"], df_es, limpiar_vencidos=True)
+        escritos, limpiados = actualizar_hoja(wb["Spain OMIP"], df_es, limpiar_vencidos=True, debug_name="Spain OMIP")
         print(f"Spain OMIP: escritos={escritos}, limpiados={limpiados}")
     else:
         print("Spain OMIP: sin CSV nuevo. Se conserva la plantilla.")
 
     if df_pt is not None and "Portugal OMIP" in wb.sheetnames:
-        escritos, limpiados = actualizar_hoja(wb["Portugal OMIP"], df_pt, limpiar_vencidos=True)
+        escritos, limpiados = actualizar_hoja(wb["Portugal OMIP"], df_pt, limpiar_vencidos=True, debug_name="Portugal OMIP")
         print(f"Portugal OMIP: escritos={escritos}, limpiados={limpiados}")
     else:
         print("Portugal OMIP: sin CSV nuevo. Se conserva la plantilla.")
