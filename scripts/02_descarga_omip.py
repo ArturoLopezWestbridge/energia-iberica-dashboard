@@ -12,7 +12,7 @@ OUTPUT_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es.csv")
 PROGRESS_PATH = os.path.join(BASE_DIR, "data", "omip_futuros_es_progreso.txt")
 
 START_DATE = dt.date(2019, 1, 1)
-MAX_DIAS_POR_EJECUCION = 60
+MAX_DIAS_POR_EJECUCION = 3
 BASE_URL = "https://www.omip.pt/es/dados-mercado"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -194,9 +194,26 @@ def descargar_dia(fecha: dt.date, session: requests.Session) -> pd.DataFrame:
         print(f"  Error HTTP {fecha}: {exc}")
         return pd.DataFrame()
 
+    print(f"  URL {fecha}: {response.url}")
+    print(f"  HTML size {fecha}: {len(response.text)}")
+
+    try:
+        raw_tables = pd.read_html(StringIO(response.text))
+        print(f"  Tablas encontradas {fecha}: {len(raw_tables)}")
+        for i, table in enumerate(raw_tables[:8]):
+            table = flatten_columns(table)
+            print(f"    Tabla {i}: columnas={list(table.columns)} filas={len(table)}")
+    except Exception as exc:
+        print(f"  read_html fallo {fecha}: {exc}")
+        return pd.DataFrame()
+
     df = extract_tables_from_html(response.text)
+
     if df.empty:
+        print(f"  Sin filas válidas para {fecha}")
         return df
+
+    print(f"  Filas válidas {fecha}: {len(df)}")
 
     df["TRADE_DATE"] = pd.Timestamp(fecha)
     df["ZONE"] = "ES"
@@ -209,6 +226,8 @@ def descargar_dia(fecha: dt.date, session: requests.Session) -> pd.DataFrame:
 
     df = df[df["PRICE_USED"].notna()].copy()
     df = df.drop_duplicates(subset=["TRADE_DATE", "EXCEL_HEADER"], keep="first")
+
+    print(f"  Filas con precio {fecha}: {len(df)}")
 
     return df[[
         "TRADE_DATE",
