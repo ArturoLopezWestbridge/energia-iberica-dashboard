@@ -2,11 +2,13 @@ import pandas as pd
 import os
 
 # ----------------------------
-# PATHS (ajustados a /scripts/)
+# PATHS ROBUSTOS (clave)
 # ----------------------------
-CSV_PATH = "../data/omip_futuros.csv"
-EXCEL_TEMPLATE = "../inputs/OMIP_Template.xlsx"
-OUTPUT_PATH = "../data/OMIP_actualizado.xlsx"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+CSV_PATH = os.path.join(BASE_DIR, "data", "omip_futuros.csv")
+EXCEL_TEMPLATE = os.path.join(BASE_DIR, "inputs", "OMIP_Template.xlsx")
+OUTPUT_PATH = os.path.join(BASE_DIR, "data", "OMIP_actualizado.xlsx")
 
 # ----------------------------
 # LIMPIAR NOMBRE DE CONTRATO
@@ -17,7 +19,6 @@ def limpiar_contrato(c):
 
     c = str(c).upper()
 
-    # Quitar prefijos típicos OMIP
     c = c.replace("FTB M ", "")
     c = c.replace("FTB Q ", "")
     c = c.replace("FTB CAL ", "")
@@ -29,6 +30,10 @@ def limpiar_contrato(c):
 # MAIN
 # ----------------------------
 def main():
+
+    print("BASE_DIR:", BASE_DIR)
+    print("CSV_PATH:", CSV_PATH)
+    print("EXCEL_TEMPLATE:", EXCEL_TEMPLATE)
 
     # 1. Leer histórico Excel
     if not os.path.exists(EXCEL_TEMPLATE):
@@ -54,7 +59,7 @@ def main():
 
     df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
 
-    # Detectar columna de precio automáticamente
+    # Detectar columna de precio
     posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
     if not posibles:
         raise Exception("No se encontró columna de precio (SETTLEMENT/PRICE)")
@@ -67,7 +72,7 @@ def main():
     # 3. Limpiar contratos
     df["CONTRATO"] = df["CONTRATO"].apply(limpiar_contrato)
 
-    # 4. Pivot (fechas vs contratos)
+    # 4. Pivot
     pivot = df.pivot(index="TRADE_DATE", columns="CONTRATO", values=PRECIO_COL)
 
     pivot = pivot.reset_index().rename(columns={"TRADE_DATE": "Date"})
@@ -82,18 +87,15 @@ def main():
 
     print(f"Total fechas tras merge: {len(df_final)}")
 
-    # 6. Rellenar calendario completo (incluye fines de semana)
+    # 6. Rellenar calendario (incluye fines de semana)
     df_final = df_final.set_index("Date").asfreq("D")
-
-    # Forward fill (precios)
     df_final = df_final.ffill()
-
     df_final = df_final.reset_index()
 
     print("Fines de semana rellenados")
 
-    # 7. Guardar Excel
-    os.makedirs("../data", exist_ok=True)
+    # 7. Guardar
+    os.makedirs(os.path.join(BASE_DIR, "data"), exist_ok=True)
 
     df_final.to_excel(OUTPUT_PATH, index=False)
 
