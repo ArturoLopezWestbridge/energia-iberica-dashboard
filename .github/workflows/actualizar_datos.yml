@@ -51,7 +51,7 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions Bot"
           git config --global user.email "actions@github.com"
-          git add data/*.csv logs/*.log
+          git add data/* logs/*.log
           git diff --staged --quiet || git commit -m "🔄 Datos actualizados: $(date +'%Y-%m-%d')"
           git push
         env:
