@@ -49,15 +49,28 @@ def main():
     print(f"Histórico cargado: {len(df_hist)} filas")
 
     # 2. Leer CSV OMIP
-    if not os.path.exists(CSV_PATH):
-        raise Exception(f"No existe: {CSV_PATH}")
+ 
+if not os.path.exists(CSV_PATH):
+    print("No existe CSV OMIP. Usando solo histórico.")
+    
+    df_final = df_hist.copy()
 
-    df = pd.read_csv(CSV_PATH)
+    df_final = df_final.set_index("Date").asfreq("D")
+    df_final = df_final.ffill()
+    df_final = df_final.reset_index()
 
-    if "TRADE_DATE" not in df.columns:
-        raise Exception("CSV sin columna TRADE_DATE")
+    df_final.to_excel(OUTPUT_PATH, index=False)
 
-    df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
+    print(f"Excel generado solo con histórico: {OUTPUT_PATH}")
+    return
+
+# Esto va FUERA del if
+df = pd.read_csv(CSV_PATH)
+
+if "TRADE_DATE" not in df.columns:
+    raise Exception("CSV sin columna TRADE_DATE")
+
+df["TRADE_DATE"] = pd.to_datetime(df["TRADE_DATE"])
 
     # Detectar columna de precio
     posibles = [c for c in df.columns if "SETTLEMENT" in c.upper() or "PRICE" in c.upper()]
