@@ -32,7 +32,6 @@ MONTH_MAP = {
     "Oct": 10,
     "Nov": 11,
     "Dec": 12,
-    # variantes si aparecieran
     "Mrz": 3,
     "Mai": 5,
     "Okt": 10,
@@ -105,7 +104,6 @@ def parse_excel_header(
 
     s = re.sub(r"\s+", " ", s)
 
-    # Quarter: Q2 26
     m = re.fullmatch(r"Q([1-4])\s+(\d{2,4})", s, flags=re.IGNORECASE)
     if m:
         quarter = int(m.group(1))
@@ -115,7 +113,6 @@ def parse_excel_header(
         end_date = start_date + pd.offsets.QuarterEnd()
         return "Quarter", year, None, quarter, start_date, end_date.normalize()
 
-    # Year: Cal 26 / CAL 26 / Yr 26 / Y 26
     m = re.fullmatch(r"(?:Cal|CAL|Yr|YR|Y)\s+(\d{2,4})", s)
     if m:
         year = 2000 + int(m.group(1)[-2:])
@@ -123,7 +120,6 @@ def parse_excel_header(
         end_date = pd.Timestamp(year=year, month=12, day=31)
         return "Year", year, None, None, start_date, end_date
 
-    # Month: Apr 26
     m = re.fullmatch(r"([A-Za-z]{3})\s+(\d{2,4})", s)
     if m:
         month_abbr = m.group(1).title()
@@ -140,8 +136,14 @@ def parse_excel_header(
     return "Unknown", None, None, None, None, None
 
 
-def build_contract_key(country: str, contract_type: str, delivery_year, delivery_month,
-                       delivery_quarter, contract_label: str) -> str:
+def build_contract_key(
+    country: str,
+    contract_type: str,
+    delivery_year,
+    delivery_month,
+    delivery_quarter,
+    contract_label: str,
+) -> str:
     country_code = "ES" if country == "Spain" else "PT" if country == "Portugal" else str(country).upper()
 
     year = int(delivery_year) if pd.notna(delivery_year) else None
@@ -177,21 +179,6 @@ def build_contract_sort(contract_type: str, delivery_year, delivery_month, deliv
 
     if contract_type == "Month" and month is not None:
         return year * 100 + month
-
-    return None
-
-    # Regla:
-    # Year    -> YYYY00
-    # Quarter -> YYYY(Q*10) => 202620 para Q2 2026
-    # Month   -> YYYYMM     => 202604
-    if contract_type == "Year":
-        return delivery_year * 100
-
-    if contract_type == "Quarter" and delivery_quarter is not None:
-        return delivery_year * 100 + delivery_quarter * 10
-
-    if contract_type == "Month" and delivery_month is not None:
-        return delivery_year * 100 + delivery_month
 
     return None
 
@@ -235,6 +222,10 @@ def build_futures_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
     )
 
     futures = pd.concat([futures, parsed_df], axis=1)
+
+    futures["DeliveryYear"] = pd.to_numeric(futures["DeliveryYear"], errors="coerce").astype("Int64")
+    futures["DeliveryMonth"] = pd.to_numeric(futures["DeliveryMonth"], errors="coerce").astype("Int64")
+    futures["DeliveryQuarter"] = pd.to_numeric(futures["DeliveryQuarter"], errors="coerce").astype("Int64")
 
     unknown_contracts = futures["ContractType"].eq("Unknown").sum()
     if unknown_contracts:
@@ -294,7 +285,9 @@ def build_futures_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
         ]
     ].copy()
 
-    futures_out = futures_out.drop_duplicates(subset=["AsOfDate", "Country", "Contract"], keep="last")
+    futures_out = futures_out.drop_duplicates(
+        subset=["AsOfDate", "Country", "ContractKey"], keep="last"
+    )
     futures_out = futures_out.sort_values(
         ["Country", "AsOfDate", "ContractSort", "StartDate", "Contract"]
     ).reset_index(drop=True)
@@ -416,13 +409,13 @@ def validate_output(futures: pd.DataFrame, spot: pd.DataFrame, dim_contracts: pd
     if dim_required.difference(dim_contracts.columns):
         raise ValidationError("Faltan columnas requeridas en dim_contracts.csv")
 
-    dup_futures = futures.duplicated(subset=["AsOfDate", "Country", "Contract"]).sum()
+    dup_futures = futures.duplicated(subset=["AsOfDate", "Country", "ContractKey"]).sum()
     dup_spot = spot.duplicated(subset=["Date", "Country"]).sum()
-    dup_dim = dim_contracts.duplicated(subset=["Country", "Contract"]).sum()
+    dup_dim = dim_contracts.duplicated(subset=["Country", "ContractKey"]).sum()
 
     if dup_futures:
         raise ValidationError(
-            f"Hay {dup_futures:,} duplicados en futuros por AsOfDate + Country + Contract"
+            f"Hay {dup_futures:,} duplicados en futuros por AsOfDate + Country + ContractKey"
         )
 
     if dup_spot:
@@ -432,7 +425,7 @@ def validate_output(futures: pd.DataFrame, spot: pd.DataFrame, dim_contracts: pd
 
     if dup_dim:
         raise ValidationError(
-            f"Hay {dup_dim:,} duplicados en dim_contracts por Country + Contract"
+            f"Hay {dup_dim:,} duplicados en dim_contracts por Country + ContractKey"
         )
 
     null_contract_keys = futures["ContractKey"].isna().sum()
