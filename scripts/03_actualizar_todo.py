@@ -32,6 +32,9 @@ def main():
     # 4. Consolidación OMIP → Excel final
     run_script("scripts/05_consolidar_omip.py")
 
+        # 5. Capa Power BI desacoplada del Excel operativo
+    run_script("scripts/06_build_powerbi_dataset.py")
+
     print("\n" + "=" * 60)
     print("PIPELINE COMPLETADO CORRECTAMENTE")
     print("=" * 60)
