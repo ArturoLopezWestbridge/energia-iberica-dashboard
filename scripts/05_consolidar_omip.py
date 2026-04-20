@@ -144,6 +144,42 @@ def load_csv(path: str) -> pd.DataFrame | None:
     return df
 
 
+def get_last_existing_date_row(ws):
+    last_row = 1
+    last_date = None
+
+    for row in range(2, ws.max_row + 1):
+        date_value = parse_sheet_date(ws.cell(row=row, column=1).value)
+        if date_value is not None:
+            last_row = row
+            last_date = date_value
+
+    return last_row, last_date
+
+
+def extend_dates(ws, target_max_date: pd.Timestamp):
+    last_row, last_date = get_last_existing_date_row(ws)
+
+    if last_date is None:
+        raise ValueError("La hoja no tiene fechas base en la columna A.")
+
+    if target_max_date <= last_date:
+        return 0
+
+    added = 0
+    current = last_date + pd.Timedelta(days=1)
+    row = last_row + 1
+
+    while current <= target_max_date:
+        ws.cell(row=row, column=1, value=current.to_pydatetime())
+        ws.cell(row=row, column=1).number_format = "dd.mm.yyyy"
+        current += pd.Timedelta(days=1)
+        row += 1
+        added += 1
+
+    return added
+
+
 def build_maps(ws):
     header_to_col = {}
     header_raw = {}
@@ -225,6 +261,18 @@ def main():
 
     df_es = load_csv(CSV_ES_PATH)
     df_pt = load_csv(CSV_PT_PATH)
+
+    target_max_date = None
+    for df in (df_es, df_pt):
+        if df is not None and not df.empty:
+            max_date = df["TRADE_DATE"].max()
+            target_max_date = max_date if target_max_date is None else max(target_max_date, max_date)
+
+    if target_max_date is not None:
+        for sheet_name in ("Spain OMIP", "Portugal OMIP"):
+            if sheet_name in wb.sheetnames:
+                added = extend_dates(wb[sheet_name], target_max_date)
+                print(f"{sheet_name}: fechas añadidas={added}")
 
     if df_es is not None and "Spain OMIP" in wb.sheetnames:
         escritos, limpiados = actualizar_hoja(wb["Spain OMIP"], df_es, limpiar_vencidos=True, debug_name="Spain OMIP")
