@@ -140,28 +140,45 @@ def parse_excel_header(
     return "Unknown", None, None, None, None, None
 
 
-def build_contract_key(country: str, contract_type: str, delivery_year: Optional[int],
-                       delivery_month: Optional[int], delivery_quarter: Optional[int],
-                       contract_label: str) -> str:
-    country_code = "ES" if country == "Spain" else "PT" if country == "Portugal" else country.upper()
+def build_contract_key(country: str, contract_type: str, delivery_year, delivery_month,
+                       delivery_quarter, contract_label: str) -> str:
+    country_code = "ES" if country == "Spain" else "PT" if country == "Portugal" else str(country).upper()
 
-    if contract_type == "Year" and delivery_year is not None:
-        return f"{country_code}_Y_{delivery_year}"
+    year = int(delivery_year) if pd.notna(delivery_year) else None
+    month = int(delivery_month) if pd.notna(delivery_month) else None
+    quarter = int(delivery_quarter) if pd.notna(delivery_quarter) else None
 
-    if contract_type == "Quarter" and delivery_year is not None and delivery_quarter is not None:
-        return f"{country_code}_Q_{delivery_year}_Q{delivery_quarter}"
+    if contract_type == "Year" and year is not None:
+        return f"{country_code}_Y_{year}"
 
-    if contract_type == "Month" and delivery_year is not None and delivery_month is not None:
-        return f"{country_code}_M_{delivery_year}_{delivery_month:02d}"
+    if contract_type == "Quarter" and year is not None and quarter is not None:
+        return f"{country_code}_Q_{year}_Q{quarter}"
+
+    if contract_type == "Month" and year is not None and month is not None:
+        return f"{country_code}_M_{year}_{month:02d}"
 
     safe_label = re.sub(r"[^A-Za-z0-9]+", "_", str(contract_label).strip()).strip("_").upper()
     return f"{country_code}_UNK_{safe_label}"
 
 
-def build_contract_sort(contract_type: str, delivery_year: Optional[int],
-                        delivery_month: Optional[int], delivery_quarter: Optional[int]) -> Optional[int]:
-    if delivery_year is None:
+def build_contract_sort(contract_type: str, delivery_year, delivery_month, delivery_quarter):
+    year = int(delivery_year) if pd.notna(delivery_year) else None
+    month = int(delivery_month) if pd.notna(delivery_month) else None
+    quarter = int(delivery_quarter) if pd.notna(delivery_quarter) else None
+
+    if year is None:
         return None
+
+    if contract_type == "Year":
+        return year * 100
+
+    if contract_type == "Quarter" and quarter is not None:
+        return year * 100 + quarter * 10
+
+    if contract_type == "Month" and month is not None:
+        return year * 100 + month
+
+    return None
 
     # Regla:
     # Year    -> YYYY00
