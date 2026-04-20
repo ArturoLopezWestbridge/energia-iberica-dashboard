@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if "__file__" in globals() else os.getcwd()
 
 START_DATE = dt.date(2019, 1, 1)
-MAX_DIAS_POR_EJECUCION = 365
+MAX_DIAS_POR_EJECUCION = 10
 
 BASE_URL = "https://www.omip.pt/en/dados-mercado"
 
