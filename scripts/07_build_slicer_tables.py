@@ -39,10 +39,21 @@ def build_slicer_quarter(dim: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_slicer_month(dim: pd.DataFrame) -> pd.DataFrame:
-    """Tabla de slicer para contratos mensuales (Month)."""
     mons = dim[dim["ContractType"] == "Month"][["Contract", "ContractSort"]].copy()
     mons = mons.drop_duplicates().sort_values("ContractSort").reset_index(drop=True)
     mons.columns = ["MonLabel", "MonSort"]
+    
+    month_map = {
+        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
+        5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
+        9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"
+    }
+    def reformat_label(sort_val):
+        year = str(sort_val)[:4]
+        month = int(str(sort_val)[4:])
+        return f"{month_map[month]} {year[2:]}"
+    
+    mons["MonLabel"] = mons["MonSort"].apply(reformat_label)
     return mons
 
 
