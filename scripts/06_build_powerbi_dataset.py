@@ -38,6 +38,20 @@ MONTH_MAP = {
     "Dez": 12,
 }
 
+# Mapa para normalizar abreviaturas de meses no inglesas → inglés
+MONTH_NORMALIZE = {
+    "Mrz": "Mar",
+    "Mär": "Mar",
+    "Mai": "May",
+    "Okt": "Oct",
+    "Dez": "Dec",
+    "Dic": "Dec",
+    "Ene": "Jan",
+    "Abr": "Apr",
+    "Ago": "Aug",
+    "Nob": "Nov",
+}
+
 REQUIRED_FUTURES_COLUMNS = {
     "TRADE_DATE",
     "ZONE",
@@ -93,6 +107,22 @@ def normalize_country(zone: str) -> str:
         return "Portugal"
 
     return z
+
+
+def normalize_contract_label(label: str) -> str:
+    """
+    Normaliza el nombre del contrato al inglés.
+    Ejemplos: 'Mrz 19' → 'Mar 19', 'Mai 25' → 'May 25'
+    Contratos anuales y trimestrales no se modifican: 'Cal 25', 'Q1 25'
+    """
+    s = str(label).strip()
+    parts = s.split(" ")
+    if len(parts) == 2:
+        prefix = parts[0]
+        suffix = parts[1]
+        normalized = MONTH_NORMALIZE.get(prefix, prefix)
+        return f"{normalized} {suffix}"
+    return s
 
 
 def parse_excel_header(
@@ -240,7 +270,14 @@ def build_futures_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
     futures["AsOfDate"] = futures["TRADE_DATE"]
     futures["Country"] = futures["ZONE"].apply(normalize_country)
     futures["Commodity"] = "Power"
-    futures["Contract"] = futures["EXCEL_HEADER"].astype(str).str.strip()
+    # ── NORMALIZACIÓN: nombres de meses siempre en inglés ──────────────────
+    futures["Contract"] = (
+        futures["EXCEL_HEADER"]
+        .astype(str)
+        .str.strip()
+        .apply(normalize_contract_label)
+    )
+    # ───────────────────────────────────────────────────────────────────────
     futures["Price"] = futures["PRICE_USED"].round(2)
     futures["PriceSource"] = futures["PRICE_SOURCE"].astype(str).str.strip()
 
