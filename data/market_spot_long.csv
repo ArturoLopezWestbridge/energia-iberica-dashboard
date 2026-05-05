@@ -2674,6 +2674,9 @@ Date,Country,Commodity,Price
 2026-04-28,Portugal,Power,55.76
 2026-04-29,Portugal,Power,75.72
 2026-04-30,Portugal,Power,64.79
+2026-05-01,Portugal,Power,57.99
+2026-05-02,Portugal,Power,43.64
+2026-05-03,Portugal,Power,48.13
 2019-01-01,Spain,Power,63.45
 2019-01-02,Spain,Power,60.54
 2019-01-03,Spain,Power,64.01
@@ -5349,3 +5352,6 @@ Date,Country,Commodity,Price
 2026-04-28,Spain,Power,55.67
 2026-04-29,Spain,Power,75.72
 2026-04-30,Spain,Power,64.39
+2026-05-01,Spain,Power,57.87
+2026-05-02,Spain,Power,43.64
+2026-05-03,Spain,Power,48.13
